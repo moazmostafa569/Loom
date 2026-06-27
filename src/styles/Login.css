@@ -1,0 +1,259 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0
+}
+
+html,
+body {
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+}
+
+
+.field-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+}
+
+.wrap {
+    position: relative;
+    z-index: 2;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 24px;
+}
+
+.brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 34px;
+    text-align: center;
+}
+
+.brand .mark {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    background: var(--coral);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: #2a0f0a;
+    margin-bottom: 16px;
+}
+
+.brand .word {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 24px;
+    letter-spacing: .5px;
+}
+
+.brand .eyebrow {
+    margin-top: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+
+.card {
+    width: 100%;
+    max-width: 400px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 40px 36px;
+}
+
+.card h1 {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: 30px;
+    letter-spacing: -.2px;
+    text-align: center;
+}
+
+.card .sub {
+    margin-top: 8px;
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 14px;
+    margin-bottom: 28px;
+}
+
+.field {
+    margin-bottom: 16px;
+}
+
+.field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 7px;
+}
+
+.field .input-wrap {
+    position: relative;
+}
+
+.field input {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 13px 14px;
+    font-size: 14px;
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: border-color .15s;
+}
+
+.field input::placeholder {
+    color: var(--text-faint);
+}
+
+.field input:focus {
+    border-color: var(--mint);
+}
+
+.field .toggle-vis {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-faint);
+    font-size: 17px;
+    cursor: pointer;
+}
+
+.row-between {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 4px 0 24px;
+    font-size: 13px;
+}
+
+.remember {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-dim);
+}
+
+.remember input {
+    accent-color: var(--mint);
+    width: 15px;
+    height: 15px;
+}
+
+.row-between a {
+    color: var(--mint);
+    text-decoration: none;
+}
+
+.btn-primary {
+    width: 100%;
+    background: var(--coral);
+    color: #2a0f0a;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+}
+
+.btn-primary i {
+    margin-left: 6px;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin: 26px 0;
+    color: var(--text-faint);
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+}
+
+.divider::before,
+.divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border-strong);
+}
+
+.social-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.social-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-size: 13.5px;
+    color: var(--text);
+    background: transparent;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+}
+
+.social-btn i {
+    font-size: 17px;
+}
+
+.foot {
+    margin-top: 28px;
+    text-align: center;
+    font-size: 13.5px;
+    color: var(--text-dim);
+}
+
+.foot a {
+    color: var(--coral);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.content {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    width: 100%;
+    padding: 72px 24px;
+}
+
+.brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}

@@ -1,0 +1,109 @@
+.rail__dropdown {
+    padding: 15px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.rail__dropdown-user {
+    padding: 0 0 14px;
+}
+
+.rail__dropdown-label,
+.rail__dropdown-email {
+    display: block;
+    margin-bottom: 6px;
+}
+
+.rail__dropdown-email {
+    color: var(--text-dim);
+    word-break: break-all;
+}
+
+.rail__dropdown-btn {
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    text-align: left;
+}
+
+/* Editing UI styling */
+.post-editing {
+    margin-bottom: 1rem;
+}
+.post-edit-input {
+    width: 100%;
+    min-height: 120px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: #f5f3f0;
+    border-radius: 1rem;
+    padding: 14px 16px;
+    resize: vertical;
+    font-size: 0.95rem;
+    line-height: 1.5;
+}
+.edit-buttons {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.85rem;
+}
+.edit-save-btn,
+.edit-cancel-btn {
+    border-radius: 999px;
+    padding: 0.65rem 1rem;
+    border: 1px solid transparent;
+    font-weight: 600;
+    cursor: pointer;
+}
+.edit-save-btn {
+    background: #8fe3c0;
+    color: #0d1f14;
+    border-color: transparent;
+}
+.edit-cancel-btn {
+    background: rgba(255,255,255,0.06);
+    color: #f5f3f0;
+    border-color: rgba(255,255,255,0.16);
+}
+.edit-save-btn:hover,
+.edit-cancel-btn:hover {
+    filter: brightness(1.05);
+}
+
+/* Repost attribution styling */
+.post-repost-banner {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: fit-content;
+    margin-bottom: 0.45rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: var(--text-faint);
+    font-size: 0.75rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    box-shadow: none;
+}
+
+.post-repost-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--coral);
+    flex-shrink: 0;
+}
+
+.post-repost-icon svg {
+    width: 13px;
+    height: 13px;
+}
+
+/* Saved post bookmark styling */
+svg.saved {
+    fill: currentColor;
+    color: #FF6B6B;
+}
