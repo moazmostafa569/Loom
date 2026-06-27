@@ -23,6 +23,7 @@ import FollowingPosts from './Pages/FollowingPosts/FollowingPosts'
 import UserProfile from './Pages/UserProfile/UserProfile'
 import MyProfile from './Pages/MyProfile/myProfile'
 import SavedPosts from './Pages/SavedPosts/SavedPosts'
+import Notifications from './components/Notifications/Notifications'
 function App() {
   const routs = createBrowserRouter([
     {
@@ -35,6 +36,7 @@ function App() {
         { path: "user_profile/:id", element: <AppProtectedRoutes><UserProfile/></AppProtectedRoutes> },
         { path: "my_profile", element: <AppProtectedRoutes><MyProfile/></AppProtectedRoutes> },
         { path: "saved_posts", element: <AppProtectedRoutes><SavedPosts/></AppProtectedRoutes> },
+        { path: "notifications", element: <AppProtectedRoutes><Notifications /></AppProtectedRoutes> },
         { path: "settings", element: <AppProtectedRoutes><Settings /></AppProtectedRoutes> },
         { path: "*", element: <NotFound /> }
       ]

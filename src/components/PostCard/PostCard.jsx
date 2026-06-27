@@ -1,11 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { IconRepeat, IconBookmark, IconX, IconMessageCircle, IconHeart, IconMenu2 } from '@tabler/icons-react';
+import { IconRepeat, IconRepeatOff, IconBookmark, IconX, IconMessageCircle, IconHeart, IconMenu2 } from '@tabler/icons-react';
 import { formatPostTime } from '../../utils/PostCard';
 import { getAllComments, getReplies } from '../../services/AllComents';
 import Comments from '../Comments/Comments';
 import './../../styles/PostCard.css'
 import { useNavigate } from 'react-router-dom';
-import { savePost, updatePost, deletePost, likePost, unlikePost, sharePost } from '../../services/AllPostsServices';
+import { savePost, updatePost, deletePost, likePost, unlikePost, sharePost, unSharePost } from '../../services/AllPostsServices';
 
 const DEFAULT_AVATAR_URL = 'https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png';
 
@@ -28,6 +28,7 @@ export default function PostCard({ post, onDelete }) {
   const [isSaved, setIsSaved] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [isShared, setIsShared] = useState(false);
+  const [sharePostId, setSharePostId] = useState('');
   const [localLikesCount, setLocalLikesCount] = useState(null);
   const [localSharesCount, setLocalSharesCount] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -83,25 +84,28 @@ export default function PostCard({ post, onDelete }) {
 
 
   const [openImageSrc, setOpenImageSrc] = useState('');
-  const originalPostUser = post?.repost?.user || post?.repost?.author || post?.original?.user || post?.original?.author || post?.sharedPost?.user || post?.sharedPost?.author;
+  const repostedContent = post?.repost || post?.sharedPost || post?.original || null;
+  const isSharedPost = Boolean(post?.isShared || post?.isReposted || post?.isRepost || post?.isShare || post?.sharedBy || post?.repostedBy || repostedContent);
+  const sourcePost = isSharedPost ? (repostedContent || post) : post;
+
+  const originalPostUser = sourcePost?.user || sourcePost?.creator || sourcePost?.author || sourcePost?.createdBy || sourcePost?.postedBy || {};
   const originalAuthor = originalPostUser || post?.user || post?.creator || post?.author || post?.createdBy || post?.postedBy || {};
   const sharerUser = post?.user || post?.creator || post?.author || post?.createdBy || post?.postedBy || {};
-  const isSharedPost = Boolean(post?.isShared || post?.isReposted || post?.isRepost || post?.isShare || post?.sharedBy || post?.repostedBy || post?.repost);
   const user = originalAuthor;
   const avatarUser = isSharedPost ? sharerUser : originalAuthor;
   const photo = (avatarUser.photo || avatarUser.avatar || avatarUser.image || '').trim();
   const showImage = photo && photo !== DEFAULT_AVATAR_URL;
   const initials = getInitials(avatarUser.name || avatarUser.fullname || avatarUser.username || 'User');
   const handleText = user.username ? `@${user.username}` : user.handle ? `@${user.handle}` : user.name ? `@${user.name.trim().split(/\s+/)[0].toLowerCase()}` : '@user';
-  const createdAt = post?.createdAt || post?.created_at || post?.created || post?.timestamp || post?.date || post?.createdOn || post?.postedAt || '';
+  const createdAt = sourcePost?.createdAt || sourcePost?.created_at || sourcePost?.created || sourcePost?.timestamp || sourcePost?.date || sourcePost?.createdOn || sourcePost?.postedAt || post?.createdAt || post?.created_at || post?.created || post?.timestamp || post?.date || post?.createdOn || post?.postedAt || '';
   const timeText = formatPostTime(createdAt);
-  const originalPostText = post?.body || post?.text || post?.caption || post?.content || post?.description || post?.message || '';
+  const originalPostText = sourcePost?.body || sourcePost?.text || sourcePost?.caption || sourcePost?.content || sourcePost?.description || sourcePost?.message || '';
   const [currentBody, setCurrentBody] = useState(originalPostText);
   const postText = currentBody;
   const gifUrlMatch = postText.match(/https?:\/\/\S+?\.gif(?:\?\S*)?/i);
   const postGifUrl = gifUrlMatch ? gifUrlMatch[0].trim() : '';
   const postTextWithoutGif = postGifUrl ? postText.replace(postGifUrl, '').trim() : postText;
-  const postImage = (post?.image || post?.imageUrl || post?.photo || post?.mediaUrl || '').trim();
+  const postImage = (sourcePost?.image || sourcePost?.imageUrl || sourcePost?.photo || sourcePost?.mediaUrl || '').trim();
   const hasPostImage = Boolean(postImage);
   const hasGifPreview = Boolean(postGifUrl) && !hasPostImage;
   const initialLikesCount = Number(post?.likesCount ?? post?.likes ?? post?.likes_count ?? (Array.isArray(post?.likes) ? post.likes.length : undefined) ?? 0) || 0;
@@ -156,13 +160,30 @@ export default function PostCard({ post, onDelete }) {
     const likedState = typeof post?.isLiked === 'boolean' ? post.isLiked : likedFromArray;
     setIsLiked(Boolean(likedState));
 
-    const storedSharedPosts = JSON.parse(localStorage.getItem('shared-posts') || '[]');
-    const isPostSharedLocally = Array.isArray(storedSharedPosts) && storedSharedPosts.includes(postId);
+    const rawSharedPosts = localStorage.getItem('shared-posts');
+    let sharedPosts = {};
+    if (rawSharedPosts) {
+      try {
+        const parsed = JSON.parse(rawSharedPosts);
+        if (Array.isArray(parsed)) {
+          sharedPosts = parsed.reduce((acc, id) => ({ ...acc, [id]: null }), {});
+        } else if (parsed && typeof parsed === 'object') {
+          sharedPosts = parsed;
+        }
+      } catch (error) {
+        sharedPosts = {};
+      }
+    }
+
+    const localShareId = sharedPosts[postId] || '';
+    const isPostSharedLocally = Boolean(localShareId) || Object.prototype.hasOwnProperty.call(sharedPosts, postId);
     const apiSharedState = typeof post?.isShared === 'boolean'
       ? post.isShared
       : typeof post?.isReposted === 'boolean'
         ? post.isReposted
         : false;
+
+    setSharePostId(localShareId);
     setIsShared(isPostSharedLocally || apiSharedState);
 
     setLocalLikesCount(initialLikesCount);
@@ -221,22 +242,62 @@ export default function PostCard({ post, onDelete }) {
     }
   }
 
-  async function handleShareToggle() {
-    if (!postId || isShared) return;
+  function parseStoredSharedPosts() {
+    const raw = localStorage.getItem('shared-posts');
+    if (!raw) return {};
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.reduce((acc, id) => ({ ...acc, [id]: null }), {});
+      }
+      if (parsed && typeof parsed === 'object') return parsed;
+    } catch (error) {
+      // ignore invalid data
+    }
+    return {};
+  }
 
-    const storedSharedPosts = JSON.parse(localStorage.getItem('shared-posts') || '[]');
-    const currentSharedPosts = Array.isArray(storedSharedPosts) ? storedSharedPosts : [];
+  function saveStoredSharedPosts(posts) {
+    localStorage.setItem('shared-posts', JSON.stringify(posts));
+  }
+
+  function extractSharePostId(response) {
+    const payload = response?.data ?? response?.post ?? response;
+    return payload?._id || payload?.id || payload?.sharePostId || response?.data?.post?._id || response?.data?.post?.id || '';
+  }
+
+  async function handleShareToggle() {
+    if (!postId) return;
+
+    const sharedPosts = parseStoredSharedPosts();
+    const currentSharePostId = sharePostId || sharedPosts[postId] || '';
+    const canUnshare = Boolean(isShared && currentSharePostId);
 
     try {
-      await sharePost(postId);
+      if (canUnshare) {
+        await unSharePost(currentSharePostId);
+        const nextSharedPosts = { ...sharedPosts };
+        delete nextSharedPosts[postId];
+        saveStoredSharedPosts(nextSharedPosts);
+        setSharePostId('');
+        setIsShared(false);
+        setLocalSharesCount((count) => Math.max(0, count - 1));
+        return;
+      }
+
+      if (isShared) {
+        return;
+      }
+
+      const response = await sharePost(postId);
+      const createdShareId = extractSharePostId(response);
+      const nextSharedPosts = { ...sharedPosts, [postId]: createdShareId || null };
+      saveStoredSharedPosts(nextSharedPosts);
+      setSharePostId(createdShareId || '');
       setIsShared(true);
       setLocalSharesCount((count) => count + 1);
-      const updatedPosts = currentSharedPosts.includes(postId)
-        ? currentSharedPosts
-        : [...currentSharedPosts, postId];
-      localStorage.setItem('shared-posts', JSON.stringify(updatedPosts));
     } catch (error) {
-      console.error('Failed to share post:', error);
+      console.error('Failed to toggle share:', error);
     }
   }
 
@@ -399,11 +460,11 @@ export default function PostCard({ post, onDelete }) {
           </div>
           <div onClick={() => fetchAllComments(postId)} className="act cursor-pointer"><IconMessageCircle stroke={2} /> {totalCommentsAndReplies}</div>
           <div
-            className={`act ${isShared ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+            className={`act ${isShared && !sharePostId ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
             onClick={handleShareToggle}
-            aria-disabled={isShared}
+            aria-disabled={isShared && !sharePostId}
           >
-            <IconRepeat stroke={2} />
+            {isShared && sharePostId ? <IconRepeatOff stroke={2} /> : <IconRepeat stroke={2} />}
           </div>
           <div onClick={handleSavePost} className="act cursor-pointer"><IconBookmark stroke={2} className={isSaved ? 'saved' : ''} /></div>
         </div>

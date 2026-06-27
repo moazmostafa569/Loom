@@ -92,6 +92,14 @@ export default function UserProfile() {
   const [avatarPreviewOpen, setAvatarPreviewOpen] = useState(false);
   const [isFollowing, setIsFollowing] = useState(false);
 
+  function openAvatarPreview() {
+    setAvatarPreviewOpen(true);
+  }
+
+  function closeAvatarPreview() {
+    setAvatarPreviewOpen(false);
+  }
+
   async function handleFollowClick() {
     const targetUserId = profileUser?._id || profileUser?.id;
     if (!targetUserId) return;

@@ -129,7 +129,17 @@ export async function sharePost(postId) {
         if (!postId) {
             throw new Error('Missing postId for sharePost');
         }
-        let {data} = await axios.post(`${API_BASE_URL}/posts/${postId}/share`, null, {
+        let {data} = await axios.post(`${API_BASE_URL}/posts/${postId}/share`, {}, {
+            headers: getAuthHeaders()
+        })
+        return data;
+}
+
+export async function unSharePost(sharePostId) {
+        if (!sharePostId) {
+            throw new Error('Missing sharePostId for unSharePost');
+        }
+        let {data} = await axios.delete(`${API_BASE_URL}/posts/${sharePostId}`, {
             headers: getAuthHeaders()
         })
         return data;

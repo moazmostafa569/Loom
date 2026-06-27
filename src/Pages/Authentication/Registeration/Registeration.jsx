@@ -13,7 +13,7 @@ import { Button } from '@heroui/react';
 import { AuthContext } from '../../../context/Authcontext';
 export default function Registeration() {
   const navigate = useNavigate()
-  const { setToken, setEmail, setMyName, setMyImage } = useContext(AuthContext)
+  const { setToken, setEmail, setUserId, setMyName, setMyImage } = useContext(AuthContext)
   const [showPassword, setShowPassword] = useState(false)
   const [showRePassword, setShowRePassword] = useState(false)
   const [apiError, setApiError] = useState('')
@@ -84,6 +84,7 @@ export default function Registeration() {
       localStorage.setItem('user-name', userNameValue)
       setStoredUserId(userIdValue)
       setToken(firebaseToken)
+      setUserId(userIdValue)
       setEmail(userEmailValue)
       setMyName(userNameValue)
       setMyImage(userImageValue)

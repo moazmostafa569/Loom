@@ -16,7 +16,7 @@ export default function Login() {
   const navigate = useNavigate()
   const [apiError, setApiError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
-  let { setToken, setEmail, setMyName, setMyImage } = useContext(AuthContext)
+  let { setToken, setEmail, setUserId, setMyName, setMyImage } = useContext(AuthContext)
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     mode: 'onChange',
     resolver: zodResolver(loginSchema),
@@ -38,7 +38,9 @@ export default function Login() {
       localStorage.setItem('user-token', tokenValue)
       localStorage.setItem('user-email', data.email)
       if (userIdValue) {
+        localStorage.setItem('user-id', userIdValue)
         setStoredUserId(userIdValue)
+        setUserId(userIdValue)
       }
       const message = response?.message || 'Login success'
       toast.success(message)
@@ -73,6 +75,7 @@ export default function Login() {
       localStorage.setItem('user-name', userNameValue)
       setStoredUserId(userIdValue)
       setToken(firebaseToken)
+      setUserId(userIdValue)
       setEmail(userEmailValue)
       setMyName(userNameValue)
       setMyImage(userImageValue)
