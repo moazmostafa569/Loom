@@ -428,6 +428,15 @@
 }
 
 /* ── bottom-sheet styles ───────────────────────────────────── */
+.av--clickable {
+  cursor: pointer;
+}
+
+.av--clickable:focus-visible {
+  outline: 2px solid var(--comment-mint);
+  outline-offset: 2px;
+}
+
 .sheet-backdrop {
   position: fixed;
   inset: 0;

@@ -5,10 +5,10 @@ import {
   IconMessageCircle,
   IconDotsVertical,
   IconMoodSmile,
-  IconPhoto,
   IconArrowsSort,
 } from "@tabler/icons-react";
 import EmojiPicker from "emoji-picker-react";
+import { useNavigate } from "react-router-dom";
 
 import "./../../styles/comments.css";
 import { formatPostTime, getAvatarPhoto, getInitials, handleAddComment } from "../../utils/PostCard";
@@ -130,6 +130,7 @@ function normalizeComment(comment, index, currentUserId = getStoredUserId()) {
     initials: getInitials(name),
     color: comment?.color || getColorFromId(originalId),
     avatarUrl: getAvatarUrl(user),
+    userId: getCommentCreatorId(comment),
     time: formatPostTime(createdAt),
     timestamp: createdAt ? new Date(createdAt).getTime() || 0 : 0,
     text: comment?.content || comment?.body || comment?.text || "",
@@ -143,16 +144,30 @@ function normalizeComment(comment, index, currentUserId = getStoredUserId()) {
 
 
 /* ─── Avatar ───────────────────────────────────────────────── */
-function Avatar({ initials, color = "coral", small = false, src = "", name = "User" }) {
+function Avatar({ initials, color = "coral", small = false, src = "", name = "User", onClick }) {
+  const clickableProps = onClick
+    ? {
+        role: "button",
+        tabIndex: 0,
+        onClick,
+        onKeyDown: (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onClick();
+          }
+        },
+      }
+    : {};
+
   return (
-    <div className={`av av--${color}${small ? " av--sm" : ""}`}>
+    <div className={`av av--${color}${small ? " av--sm" : ""}${onClick ? " av--clickable" : ""}`} {...clickableProps}>
       {src ? <img src={src} alt={name} /> : initials}
     </div>
   );
 }
 
 /* ─── Single reply ─────────────────────────────────────────── */
-function Reply({ reply, currentUserId, postId }) {
+function Reply({ reply, currentUserId, postId, onAvatarClick }) {
   const replyId = reply.originalId ?? reply.id;
   const [liked, setLiked] = useState(() => getCommentLiked(reply.rawComment ?? reply, currentUserId));
   const [likes, setLikes] = useState(() => getLikesCount(reply));
@@ -210,6 +225,7 @@ function Reply({ reply, currentUserId, postId }) {
           small
           src={reply.avatarUrl}
           name={reply.name}
+          onClick={reply.userId ? () => onAvatarClick?.(reply.userId) : undefined}
         />
         <div className="comment__line comment__line--hidden" />
       </div>
@@ -257,12 +273,14 @@ function Reply({ reply, currentUserId, postId }) {
 }
 
 /* ─── Single comment ───────────────────────────────────────── */
-function Comment({ comment, currentUserId, currentUserAvatar, isLast, onReplyClick, onReplySubmit, onCommentUpdated, activeReplies = [], postId, onFetchReplies }) {
+function Comment({ comment, currentUserId, currentUserAvatar, isLast, onReplyClick, onReplySubmit, onCommentUpdated, activeReplies = [], postId, onFetchReplies, onAvatarClick }) {
   const [liked, setLiked] = useState(() => getCommentLiked(comment.rawComment ?? comment, currentUserId));
   const [likes, setLikes] = useState(() => getLikesCount(comment));
   const [replyingTo, setReplyingTo] = useState(false);
   const [replyText, setReplyText] = useState("");
+  const [showReplyEmojiPicker, setShowReplyEmojiPicker] = useState(false);
   const replyRef = useRef(null);
+  const replyEmojiPickerRef = useRef(null);
   const editRef = useRef(null);
   const [commentState, setCommentState] = useState(comment);
   const replies = Array.isArray(commentState.replies) ? commentState.replies : [];
@@ -314,6 +332,23 @@ function Comment({ comment, currentUserId, currentUserAvatar, isLast, onReplyCli
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [showDropdown]);
+
+  useEffect(() => {
+    if (!showReplyEmojiPicker) return;
+
+    function handleClickOutside(event) {
+      if (replyEmojiPickerRef.current?.contains(event.target)) return;
+      setShowReplyEmojiPicker(false);
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showReplyEmojiPicker]);
 
 
   async function sendLike() {
@@ -443,6 +478,11 @@ function Comment({ comment, currentUserId, currentUserAvatar, isLast, onReplyCli
     setTimeout(() => replyRef.current?.focus(), 80);
   }
 
+  function handleReplyEmojiClick(emojiData) {
+    setReplyText((prev) => `${prev}${emojiData.emoji}`);
+    replyRef.current?.focus();
+  }
+
   return (
     <div className="comment">
       <div className="comment__rail">
@@ -451,6 +491,7 @@ function Comment({ comment, currentUserId, currentUserAvatar, isLast, onReplyCli
           color={comment.color}
           src={comment.avatarUrl}
           name={comment.name}
+          onClick={comment.userId ? () => onAvatarClick?.(comment.userId) : undefined}
         />
         <div className={`comment__line${isLast && !repliesOpen ? " comment__line--hidden" : ""}`} />
       </div>
@@ -565,7 +606,7 @@ function Comment({ comment, currentUserId, currentUserAvatar, isLast, onReplyCli
               src={currentUserAvatar.photo}
               name={currentUserAvatar.name}
             />
-            <div className="comments__compose-body">
+            <div className="comments__compose-body relative">
               <textarea
                 ref={replyRef}
                 className="comments__input"
@@ -574,15 +615,25 @@ function Comment({ comment, currentUserId, currentUserAvatar, isLast, onReplyCli
                 onChange={(e) => setReplyText(e.target.value)}
                 rows={2}
               />
+              {showReplyEmojiPicker && (
+                <div className="comments__emoji-picker absolute z-50 bottom-0 top-30" ref={replyEmojiPickerRef}>
+                  <EmojiPicker onEmojiClick={handleReplyEmojiClick} />
+                </div>
+              )}
               <div className="comments__compose-foot">
                 <div className="comments__compose-icons">
-                  <button aria-label="Add emoji"><IconMoodSmile size={17} stroke={1.5} /></button>
-                  <button aria-label="Add image"><IconPhoto size={17} stroke={1.5} /></button>
+                  <button
+                    type="button"
+                    aria-label="Add emoji"
+                    onClick={() => setShowReplyEmojiPicker((open) => !open)}
+                  >
+                    <IconMoodSmile size={17} stroke={1.5} />
+                  </button>
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button
                     className="comment__action"
-                    onClick={() => { setReplyingTo(false); setReplyText(""); }}
+                    onClick={() => { setReplyingTo(false); setReplyText(""); setShowReplyEmojiPicker(false); }}
                   >
                     Cancel
                   </button>
@@ -596,6 +647,7 @@ function Comment({ comment, currentUserId, currentUserAvatar, isLast, onReplyCli
                         await onReplySubmit?.(commentId, replyText.trim());
                         setReplyingTo(false);
                         setReplyText("");
+                        setShowReplyEmojiPicker(false);
                         setRepliesOpen(true);
                       } catch (error) {
                         console.error("Failed to post reply:", error);
@@ -623,7 +675,13 @@ function Comment({ comment, currentUserId, currentUserAvatar, isLast, onReplyCli
             ) : (
               <>
                 {repliesToShow.map((reply) => (
-                  <Reply key={reply.id} reply={reply} currentUserId={currentUserId} postId={postId} />
+                  <Reply
+                    key={reply.id}
+                    reply={reply}
+                    currentUserId={currentUserId}
+                    postId={postId}
+                    onAvatarClick={onAvatarClick}
+                  />
                 ))}
                 <button
                   className="comment__toggle-replies"
@@ -667,6 +725,7 @@ export default function Comments({
   const [selectedReplies, setSelectedReplies] = useState([]);
   const currentUserId = getStoredUserId();
   const { email, myImage, myName } = useContext(AuthContext);
+  const navigate = useNavigate();
   const currentUserName = currentUser.name || myName || email || "User";
   const currentUserAvatar = {
     initials: currentUser.initials || getInitials(currentUserName),
@@ -674,6 +733,16 @@ export default function Comments({
     photo: getAvatarPhoto(currentUser.photo || currentUser.avatar || currentUser.image || myImage),
     name: currentUserName,
   };
+
+  function openUserProfile(userId) {
+    if (!userId) return;
+    onClose?.();
+    if (currentUserId && String(userId) === String(currentUserId)) {
+      navigate("/my_profile");
+      return;
+    }
+    navigate(`/user_profile/${userId}`);
+  }
 
   const normalizedComments = useMemo(
     () =>
@@ -976,6 +1045,7 @@ export default function Comments({
               onReplySubmit={handleCreateReply}
               onCommentUpdated={onCommentAdded}
               onFetchReplies={fetchAllReplies}
+              onAvatarClick={openUserProfile}
             />
           ))
         ) : (
