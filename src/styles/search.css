@@ -1,0 +1,334 @@
+.search-page {
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  padding: 2rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .search-page {
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .search-page {
+    padding: 2rem 2.5rem;
+  }
+}
+
+.search-inner {
+  max-width: 64rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--surface);
+  border: 1.5px solid var(--mint);
+  border-radius: 999px;
+  padding: 0 1.25rem;
+  height: 52px;
+}
+
+.search-bar__icon {
+  color: var(--mint);
+  flex-shrink: 0;
+}
+
+.search-bar__input {
+  flex: 1;
+  background: transparent;
+  outline: none;
+  border: none;
+  font-size: 15px;
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+.search-bar__input::placeholder {
+  color: var(--text-faint);
+}
+
+.search-filters {
+  display: flex;
+  gap: 0.625rem;
+  flex-wrap: wrap;
+}
+
+.search-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 13px;
+  color: var(--text-dim);
+  background: transparent;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.search-filter-btn:hover {
+  color: var(--text);
+  border-color: var(--border-strong);
+}
+
+.search-filter-btn.active {
+  background: var(--mint-dim);
+  border-color: var(--mint);
+  color: var(--mint);
+}
+
+[data-theme="light"] .search-filter-btn.active {
+  background: var(--coral-dim);
+  border-color: var(--coral);
+  color: var(--coral);
+}
+
+.search-section-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.search-trends {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .search-trends {
+    gap: 1.25rem;
+  }
+}
+
+.search-trend-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.search-trend-card:hover {
+  border-color: var(--border-strong);
+}
+
+.search-trend-card__accent {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-bottom-left-radius: 60px;
+  border-top-right-radius: 1rem;
+  opacity: 0.2;
+}
+
+.search-trend-card__accent--coral { background: var(--coral); }
+.search-trend-card__accent--mint { background: var(--mint); }
+.search-trend-card__accent--gold { background: var(--gold); }
+.search-trend-card__accent--lav { background: var(--lav); }
+
+.search-trend-card__tag {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--mint);
+  margin-bottom: 0.5rem;
+}
+
+[data-theme="light"] .search-trend-card__tag {
+  color: var(--coral);
+}
+
+.search-trend-card__name {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 0.375rem;
+}
+
+.search-trend-card__count {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.search-people-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.search-person-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 1rem;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.search-person-row:hover {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.search-person-av {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.search-person-av--coral { background: var(--coral); color: var(--coral-dark); }
+.search-person-av--mint { background: var(--mint); color: var(--mint-dark); }
+.search-person-av--gold { background: var(--gold); color: var(--gold-dark); }
+.search-person-av--lav { background: var(--lav); color: var(--lav-dark); }
+.search-person-av--default { background: var(--surface-2); color: var(--text); }
+
+.search-person-av img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
+}
+
+.search-person-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.search-person-name {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.search-person-verified {
+  display: inline-flex;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--mint);
+  align-items: center;
+  justify-content: center;
+}
+
+[data-theme="light"] .search-person-verified {
+  background: var(--coral);
+}
+
+.search-person-handle {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.search-person-bio {
+  font-size: 12.5px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-follow-btn {
+  flex-shrink: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 12.5px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--font-body);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.search-follow-btn:hover {
+  border-color: var(--border-strong);
+}
+
+.search-follow-btn.following {
+  background: var(--mint-dim);
+  border-color: var(--mint);
+  color: var(--mint);
+}
+
+[data-theme="light"] .search-follow-btn.following {
+  background: var(--coral-dim);
+  border-color: var(--coral);
+  color: var(--coral);
+}
+
+.search-recent-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.search-recent-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 13.5px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.search-recent-item:hover {
+  background: var(--surface);
+}
+
+.search-recent-item__icon {
+  color: var(--text-faint);
+  flex-shrink: 0;
+}
+
+.search-recent-item__text {
+  flex: 1;
+}
+
+.search-recent-item__remove {
+  color: var(--text-faint);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  transition: color 0.15s;
+}
+
+.search-recent-item__remove:hover {
+  color: var(--coral);
+}

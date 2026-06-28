@@ -1,7 +1,7 @@
 import { useContext, useState, useRef, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import './../../styles/Navbar.css'
-import { IconHome, IconSearch, IconBell, IconBookmark, IconPlus } from '@tabler/icons-react'
+import { IconHome,IconSettings2 , IconSearch, IconBell, IconBookmark, IconPlus } from '@tabler/icons-react'
 import { AuthContext } from '../../context/Authcontext'
 import { getInitials } from '../../utils/PostCard'
 import { getUnreadCount } from '../../services/notificationsServices'
@@ -17,14 +17,14 @@ export default function Navbar() {
   const panelRef = useRef(null)
   const bellRef = useRef(null)
   
-  const activeItem = location.pathname.startsWith('/notifications')
-    ? 'notifications'
-    : location.pathname === '/search'
+  const activeItem = location.pathname === '/search'
     ? 'search'
     : location.pathname === '/saved_posts'
     ? 'saved'
+    : location.pathname === '/settings'
+    ? 'settings'
     : 'home'
-  const bellActive = panelOpen || activeItem === 'notifications'
+  const bellActive = panelOpen
   
   const isArabicDevice =
     typeof navigator !== 'undefined' &&
@@ -33,13 +33,11 @@ export default function Navbar() {
     )
   const directionClass = isArabicDevice ? '[direction:rtl] lg:[direction:ltr]' : ''
 
-  // Get user email from context
   const userEmail = email || 'user@example.com'
   const avatarSrc = myImage?.trim() || ''
   const avatarName = myName?.trim() || userEmail
   const initials = getInitials(avatarName)
 
-  // Close dropdown and notification panel when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       const target = event.target
@@ -83,18 +81,20 @@ export default function Navbar() {
     localStorage.clear()
     setToken(null)
     setShowDropdown(false)
+    navigate('/login')
   }
 
   return <>
-    <div className={`${directionClass} rail fixed bottom-0 left-0 right-0 z-10 flex items-center justify-between gap-2 border-t border-white/10 bg-primary px-2! py-2! lg:sticky lg:top-0 lg:left-0 lg:h-dvh lg:w-fit lg:flex-col lg:items-start lg:justify-start lg:gap-10 lg:border-t-0 lg:border-r lg:border-white/10 lg:p-5!`}>
+    <div className={`${directionClass} rail fixed bottom-0 left-0 right-0 z-10 flex items-center justify-between gap-2 px-2! py-2! lg:sticky lg:top-0 lg:left-0 lg:h-dvh lg:w-fit lg:flex-col lg:items-start lg:justify-start lg:gap-10 lg:p-5!`}>
       <div className="contents lg:block lg:px-3 relative">
 
-        <div className="mark hidden! h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#ff6b5b] text-lg font-bold text-[#2a0f0a] lg:flex!">L</div>
+        <div className="mark hidden! lg:flex!">L</div>
         <nav className="flex! flex-1 flex-row! items-center justify-around gap-1 lg:flex-col! lg:items-center lg:justify-start lg:gap-2">
             <div onClick={() => navigate('/')} className={`nitem${activeItem === 'home' ? ' active' : ''} flex h-12 w-12 items-center justify-center rounded-[14px]`}><IconHome size={20} /></div>
           <div onClick={() => navigate('/search')} className={`nitem${activeItem === 'search' ? ' active' : ''} lg:flex! hidden! h-12 w-12 items-center justify-center rounded-[14px] cursor-pointer`}><IconSearch size={20} /></div>
           <div ref={bellRef} onClick={toggleNotificationsPanel} className={`nitem${bellActive ? ' active' : ''} flex h-12 w-12 items-center justify-center rounded-[14px] cursor-pointer`}><IconBell size={20} />{unreadCount > 0 && <span className="badge" />}</div>
           <div onClick={() => navigate('/saved_posts')} className={`nitem${activeItem === 'saved' ? ' active' : ''} lg:flex! h-12 w-12 items-center justify-center rounded-[14px]`}><IconBookmark size={20} /></div>
+          <div onClick={() => navigate('/settings')} className={`nitem${activeItem === 'settings' ? ' active' : ''} lg:flex! h-12 w-12 items-center justify-center rounded-[14px]`}><IconSettings2 size={20} /></div>
 
         </nav>
         {panelOpen && (
@@ -103,12 +103,12 @@ export default function Navbar() {
             unreadCount={unreadCount}
             onUnreadCountChange={setUnreadCount}
             panelRef={panelRef}
+            onClose={() => setPanelOpen(false)}
           />
         )}
       </div>
 
       <div className="flex shrink-0 items-center gap-3 lg:mt-6 lg:flex-col">
-        <div className="compose"><IconPlus size={20} /></div>
         <div className="relative" ref={dropdownRef}>
           <div className="me lg:flex! cursor-pointer" onClick={() => setShowDropdown(!showDropdown)}>
             {avatarSrc ? (
@@ -118,24 +118,24 @@ export default function Navbar() {
                 className="h-10 w-10 rounded-xl object-cover!"
               />
             ) : (
-              <div className="h-10 w-10 rounded-xl bg-[#ff6b5b] text-sm font-semibold text-[#2a0f0a] flex items-center justify-center">
+              <div className="avatar-fallback h-10 w-10 rounded-xl text-sm font-semibold flex items-center justify-center">
                 {initials}
               </div>
             )}
           </div>
           
           {showDropdown && (
-            <div className="rail__dropdown absolute bottom-16 left-0 w-70 bg-primary rounded-2xl shadow-lg p-5 z-50">
-              <div className="rail__dropdown-user text-left! mb-4 pb-4 border-b border-gray-200">
-                <p className="rail__dropdown-label text-sm text-gray-600">Signed in as</p>
-                <p className="rail__dropdown-email text-[#9B97A8] font-medium truncate">{userEmail}</p>
+            <div className="rail__dropdown absolute bottom-16 left-0 w-70 rounded-2xl shadow-lg p-5 z-50">
+              <div className="rail__dropdown-user text-left! mb-4 pb-4 border-b border-[var(--border)]">
+                <p className="rail__dropdown-label text-sm">Signed in as</p>
+                <p className="rail__dropdown-email font-medium truncate">{userEmail}</p>
               </div>
-              <button onClick={() => navigate('/my_profile')} className="rail__dropdown-btn w-full text-left px-4 py-3 text-gray-700 cursor-pointer hover:bg-gray-300 rounded-lg mb-2 transition">
+              <button onClick={() => navigate('/my_profile')} className="rail__dropdown-btn w-full text-left px-4 py-3 cursor-pointer rounded-lg mb-2 transition">
                 My Profile
               </button>
               <button 
                 onClick={LogOut}
-                className="rail__dropdown-btn w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-300 cursor-pointer rounded-lg transition"
+                className="rail__dropdown-btn w-full text-left px-4 py-3 cursor-pointer rounded-lg transition"
               >
                 Log Out
               </button>

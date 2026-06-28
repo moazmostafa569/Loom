@@ -148,7 +148,12 @@ export default function UserProfile() {
     }
 
     setFetchError(null);
-    const isUserFollowing = profileResponse?.data?.user?.isFollowing ?? profileResponse?.user?.isFollowing ?? false;
+    const isUserFollowing =
+      profileResponse?.data?.isFollowing ??
+      profileResponse?.data?.user?.isFollowing ??
+      profileResponse?.user?.isFollowing ??
+      profileResponse?.isFollowing ??
+      false;
     setIsFollowing(isUserFollowing);
   }, [profileError, profileResponse, userId]);
 

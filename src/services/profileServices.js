@@ -43,3 +43,4 @@ export async function uploadProfilePicture(formData) {
     return data;
 }
 
+

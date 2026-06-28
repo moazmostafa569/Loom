@@ -5,7 +5,8 @@ import {
   IconPhoto, IconBookmark, IconCheck, IconClock, IconX
 } from "@tabler/icons-react"
 import { getFollowSuggestions, putFollowOrUnfollow } from "../../services/AllPostsServices"
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom"
+import "../../styles/search.css"
 
 const DEFAULT_AVATAR_URL = 'https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png';
 
@@ -24,17 +25,17 @@ const FILTERS = [
 ]
 
 const TRENDS = [
-  { tag: "#studiolife", name: "Behind the scenes", count: "12.4k posts", accent: "bg-[#ff6b5b]" },
-  { tag: "#ceramics", name: "Weekend makers", count: "9.8k posts", accent: "bg-[#8fe3c0]" },
-  { tag: "#productdesign", name: "Onboarding takes", count: "5.7k posts", accent: "bg-[#f4c95d]" },
-  { tag: "#slowliving", name: "Morning routines", count: "3.2k posts", accent: "bg-[#b9a8f0]" },
+  { tag: "#studiolife", name: "Behind the scenes", count: "12.4k posts", accent: "coral" },
+  { tag: "#ceramics", name: "Weekend makers", count: "9.8k posts", accent: "mint" },
+  { tag: "#productdesign", name: "Onboarding takes", count: "5.7k posts", accent: "gold" },
+  { tag: "#slowliving", name: "Morning routines", count: "3.2k posts", accent: "lav" },
 ]
 
 const PEOPLE = [
-  { initials: "JM", bg: "bg-[#ff6b5b]", text: "text-[#2a0f0a]", name: "Jules Marchetti", handle: "@jules_m", bio: "Studio photographer · lighting nerd", verified: true, following: false },
-  { initials: "RO", bg: "bg-[#8fe3c0]", text: "text-[#0d2b20]", name: "Rohan Oduya", handle: "@rohan", bio: "Product thinker · design systems", verified: false, following: true },
-  { initials: "TK", bg: "bg-[#f4c95d]", text: "text-[#3a2a04]", name: "Tariq Khan", handle: "@tariq.k", bio: "Learning pottery one bad mug at a time", verified: false, following: false },
-  { initials: "PV", bg: "bg-[#b9a8f0]", text: "text-[#1f1734]", name: "Priya Venkat", handle: "@priya_v", bio: "Shipping small things with big pride", verified: true, following: false },
+  { initials: "JM", avClass: "search-person-av--coral", name: "Jules Marchetti", handle: "@jules_m", bio: "Studio photographer · lighting nerd", verified: true, following: false },
+  { initials: "RO", avClass: "search-person-av--mint", name: "Rohan Oduya", handle: "@rohan", bio: "Product thinker · design systems", verified: false, following: true },
+  { initials: "TK", avClass: "search-person-av--gold", name: "Tariq Khan", handle: "@tariq.k", bio: "Learning pottery one bad mug at a time", verified: false, following: false },
+  { initials: "PV", avClass: "search-person-av--lav", name: "Priya Venkat", handle: "@priya_v", bio: "Shipping small things with big pride", verified: true, following: false },
 ]
 
 const RECENT = ["#ceramics", "mirasolano", "#studiolife", "product design onboarding"]
@@ -111,32 +112,28 @@ export default function Search() {
   }
 
   return (
-    <div className="min-h-screen bg-[#15131c] text-[#f5f3f0] font-sans  px-4 py-8 sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-5xl flex flex-col !m-auto">
+    <div className="search-page">
+      <div className="search-inner">
 
-        {/* Search bar */}
         <section className="flex flex-col gap-4">
-          <div className="flex items-center gap-3 bg-[#1e1b28] border-[1.5px] border-[#8fe3c0] rounded-full px-5 h-[52px]">
-            <IconSearch size={18} className="text-[#8fe3c0] shrink-0" />
+          <div className="search-bar">
+            <IconSearch size={18} className="search-bar__icon" />
             <input
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search people, threads, topics…"
-              className="flex-1 bg-transparent outline-none text-[15px] text-[#f5f3f0] placeholder:text-[#5e5a6e]"
+              className="search-bar__input"
             />
           </div>
 
-          {/* Filter chips */}
-          <div className="flex gap-2.5 sm:gap-3 flex-wrap">
+          <div className="search-filters">
             {FILTERS.map(f => (
               <button
                 key={f.label}
+                type="button"
                 onClick={() => handleFilterClick(f.label)}
-                className={`flex items-center gap-2 border cursor-pointer rounded-full !px-4 py-2 text-[13px] transition-colors ${activeFilter === f.label
-                  ? "bg-[rgba(143,227,192,.14)] border-[#8fe3c0] text-[#8fe3c0]"
-                  : "border-white/10 text-[#9b97a8] hover:text-white hover:border-white/20"
-                  }`}
+                className={`search-filter-btn${activeFilter === f.label ? " active" : ""}`}
               >
                 {f.icon} {f.label}
               </button>
@@ -146,19 +143,14 @@ export default function Search() {
 
         {showTrending && (
           <section className="flex flex-col gap-4">
-            <p className="font-mono text-[11px] tracking-widest uppercase text-[#5e5a6e]">
-              Trending on Loom
-            </p>
-            <div className="grid !grid-cols-2 !sm:grid-cols-2 !gap-4 !sm:gap-5">
+            <p className="search-section-label">Trending on Loom</p>
+            <div className="search-trends">
               {TRENDS.map(t => (
-                <div
-                  key={t.tag}
-                  className="relative bg-[#1e1b28] border border-white/[.08] rounded-2xl !p-5 overflow-hidden cursor-pointer hover:border-white/20 transition-colors"
-                >
-                  <div className={`absolute top-0 right-0 w-14 h-14 rounded-bl-[60px] rounded-tr-2xl opacity-20 ${t.accent}`} />
-                  <p className="font-mono text-[12px] text-[#8fe3c0] mb-2">{t.tag}</p>
-                  <p className="text-[14px] font-semibold mb-1.5">{t.name}</p>
-                  <p className="font-mono text-[12px] text-[#5e5a6e]">{t.count}</p>
+                <div key={t.tag} className="search-trend-card">
+                  <div className={`search-trend-card__accent search-trend-card__accent--${t.accent}`} />
+                  <p className="search-trend-card__tag">{t.tag}</p>
+                  <p className="search-trend-card__name">{t.name}</p>
+                  <p className="search-trend-card__count">{t.count}</p>
                 </div>
               ))}
             </div>
@@ -166,42 +158,35 @@ export default function Search() {
         )}
 
         {showPeopleSection && (
-          <section className="flex flex-col !gap-4">
-            <p className="font-mono text-[11px] tracking-widest uppercase text-[#5e5a6e]">
-              People you might know
-            </p>
-            <div className="flex flex-col !gap-3">
+          <section className="flex flex-col gap-4">
+            <p className="search-section-label">People you might know</p>
+            <div className="search-people-list">
               {peopleToShow.map(p => {
                 const isLocal = Boolean(p.initials);
                 const handleKey = p.handle || p.username || p._id || p.name;
 
                 if (isLocal) {
                   return (
-                    <div
-                      key={handleKey}
-                      className="flex items-center !gap-4 !px-4 !py-4 rounded-2xl border border-transparent hover:bg-[#1e1b28] hover:border-white/[.06] transition-colors "
-                    >
-                      <div className={`w-12 h-12 rounded-[12px] ${p.bg} ${p.text} flex items-center justify-center font-bold text-[14px] shrink-0`}>
+                    <div key={handleKey} className="search-person-row">
+                      <div className={`search-person-av ${p.avClass}`}>
                         {p.initials}
                       </div>
-                      <div className="flex-1 min-w-0 flex flex-col !gap-0.5">
-                        <div className="flex items-center !gap-1.5 text-[14px] font-semibold">
+                      <div className="search-person-info">
+                        <div className="search-person-name">
                           {p.name}
                           {p.verified && (
-                            <span className="inline-flex w-[15px] h-[15px] rounded-full bg-[#8fe3c0] items-center justify-center">
-                              <IconCheck size={9} className="text-[#0d2b20]" strokeWidth={3} />
+                            <span className="search-person-verified">
+                              <IconCheck size={9} strokeWidth={3} />
                             </span>
                           )}
                         </div>
-                        <p className="font-mono text-[12px] text-[#5e5a6e]">{p.handle}</p>
-                        <p className="text-[12.5px] text-[#9b97a8] truncate">{p.bio}</p>
+                        <p className="search-person-handle">{p.handle}</p>
+                        <p className="search-person-bio">{p.bio}</p>
                       </div>
                       <button
+                        type="button"
                         onClick={() => handleToggleFollow(null, p.handle)}
-                        className={`shrink-0 border rounded-full !px-4 cursor-pointer !py-2 text-[12.5px] transition-colors ${followMap[p.handle]
-                          ? "bg-[rgba(143,227,192,.14)] border-[#8fe3c0] text-[#8fe3c0]"
-                          : "border-white/10 text-[#f5f3f0] hover:border-white/30"
-                          }`}
+                        className={`search-follow-btn${followMap[p.handle] ? " following" : ""}`}
                       >
                         {followMap[p.handle] ? "Following" : "Follow"}
                       </button>
@@ -215,31 +200,26 @@ export default function Search() {
                 const initials = getInitials(name);
 
                 return (
-                  <div
-                    key={p._id || handleKey}
-                    className="flex items-center !gap-4 !px-4 !py-4 rounded-2xl border border-transparent hover:bg-[#1e1b28] hover:border-white/[.06] transition-colors "
-                  >
-                    <div className={`w-12 h-12 rounded-[12px] flex items-center justify-center font-bold text-[14px] shrink-0 bg-[#2a2730] overflow-hidden cursor-pointer`}>
+                  <div key={p._id || handleKey} className="search-person-row">
+                    <div
+                      className="search-person-av search-person-av--default cursor-pointer"
+                      onClick={() => getUserProfile(p._id)}
+                    >
                       {showImage ? (
-                        <img src={photo} alt={name} className="w-full h-full object-cover rounded-[12px]" />
+                        <img src={photo} alt={name} />
                       ) : (
                         initials
                       )}
                     </div>
-                    <div onClick={() => getUserProfile(p._id)}
-                      className="flex-1 min-w-0 flex flex-col !gap-0.5 cursor-pointer">
-                      <div className="flex items-center !gap-1.5 text-[14px] font-semibold">
-                        {name}
-                      </div>
-                      <p className="font-mono text-[12px] text-[#5e5a6e]">{`@${p.username || p.handle || (p.name || '').toLowerCase().split(/\s+/)[0]}`}</p>
-                      <p className="text-[12.5px] text-[#9b97a8] truncate">{p.bio || ''}</p>
+                    <div onClick={() => getUserProfile(p._id)} className="search-person-info">
+                      <div className="search-person-name">{name}</div>
+                      <p className="search-person-handle">{`@${p.username || p.handle || (p.name || '').toLowerCase().split(/\s+/)[0]}`}</p>
+                      <p className="search-person-bio">{p.bio || ''}</p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => handleToggleFollow(p._id, handleKey)}
-                      className={`shrink-0 border rounded-full !px-4 cursor-pointer !py-2 text-[12.5px] transition-colors ${followMap[handleKey]
-                        ? "bg-[rgba(143,227,192,.14)] border-[#8fe3c0] text-[#8fe3c0]"
-                        : "border-white/10 text-[#f5f3f0] hover:border-white/30"
-                        }`}
+                      className={`search-follow-btn${followMap[handleKey] ? " following" : ""}`}
                     >
                       {followMap[handleKey] ? "Following" : "Follow"}
                     </button>
@@ -248,23 +228,17 @@ export default function Search() {
               })}
             </div>
 
-            {/* Recent searches */}
-            <section className="flex flex-col  gap-4 pb-6">
-              <p className="font-mono text-[11px] tracking-widest uppercase text-[#5e5a6e]">
-                Recent searches
-              </p>
-              <div className="flex flex-col gap-2.5">
+            <section className="flex flex-col gap-4 pb-6">
+              <p className="search-section-label">Recent searches</p>
+              <div className="search-recent-list">
                 {recent.map(r => (
-                  <div
-                    key={r}
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#1e1b28] text-[13.5px] text-[#9b97a8] cursor-pointer"
-                  >
-                    <IconClock size={16} className="text-[#5e5a6e] shrink-0" />
-                    <span className="flex-1">{r}</span>
+                  <div key={r} className="search-recent-item">
+                    <IconClock size={16} className="search-recent-item__icon" />
+                    <span className="search-recent-item__text">{r}</span>
                     <button
                       type="button"
                       onClick={() => setRecent(prev => prev.filter(x => x !== r))}
-                      className="text-[#5e5a6e] hover:text-[#ff6b5b] transition-colors p-1"
+                      className="search-recent-item__remove"
                       aria-label={`Remove ${r} from recent searches`}
                     >
                       <IconX size={14} />

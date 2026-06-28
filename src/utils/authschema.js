@@ -20,10 +20,21 @@ export const registrationSchema = z.object({
   path: ['rePassword']
 });
 
+const passwordField = z.string()
+  .min(8, 'Password must be at least 8 characters')
+  .regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/, 'Password must include uppercase, lowercase, a number, and a special character')
+
 export const changePasswordSchema = z.object({
-  password: z.string()
-    .min(8, 'Password must be at least 8 characters')
-    .regex(/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/, 'Password must include uppercase, lowercase, a number, and a special character'),
+  password: passwordField,
+  rePassword: z.string(),
+}).refine((data) => data.password === data.rePassword, {
+  message: 'Passwords do not match',
+  path: ['rePassword'],
+})
+
+export const settingsChangePasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Current password is required'),
+  password: passwordField,
   rePassword: z.string(),
 }).refine((data) => data.password === data.rePassword, {
   message: 'Passwords do not match',

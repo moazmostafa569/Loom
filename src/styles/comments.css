@@ -1,24 +1,24 @@
 /* ─── Loom · Comments styles ─────────────────────────────────── */
 
 :root {
-  --comment-bg:          #1e1b28;
-  --comment-surface:     #262232;
-  --comment-surface-2:   #332d44;
-  --comment-border:      rgba(245, 243, 240, 0.08);
-  --comment-border-strong: rgba(245, 243, 240, 0.16);
-  --comment-coral:       #ff6b5b;
-  --comment-coral-dim:   rgba(255, 107, 91, 0.14);
-  --comment-mint:        #8fe3c0;
-  --comment-mint-dim:    rgba(143, 227, 192, 0.14);
-  --comment-gold:        #f4c95d;
-  --comment-lav:         #b9a8f0;
-  --comment-text:        #f5f3f0;
-  --comment-dim:         #9b97a8;
-  --comment-faint:       #5e5a6e;
-  --comment-dark:        #2a0f0a;
-  --comment-lav-dark:    #1f1734;
-  --comment-mint-dark:   #0d2b20;
-  --comment-gold-dark:   #3a2a04;
+  --comment-bg:          var(--surface);
+  --comment-surface:     var(--surface-2);
+  --comment-surface-2:   var(--surface-3);
+  --comment-border:      var(--border);
+  --comment-border-strong: var(--border-strong);
+  --comment-coral:       var(--coral);
+  --comment-coral-dim:   var(--coral-dim);
+  --comment-mint:        var(--mint);
+  --comment-mint-dim:    var(--mint-dim);
+  --comment-gold:        var(--gold);
+  --comment-lav:         var(--lav);
+  --comment-text:        var(--text);
+  --comment-dim:         var(--text-dim);
+  --comment-faint:       var(--text-faint);
+  --comment-dark:        var(--coral-dark);
+  --comment-lav-dark:    var(--lav-dark);
+  --comment-mint-dark:   var(--mint-dark);
+  --comment-gold-dark:   var(--gold-dark);
   --radius-sm:           10px;
   --radius:              18px;
 }

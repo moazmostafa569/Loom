@@ -1,16 +1,9 @@
 import { useContext, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
-  IconBell,
-  IconMail,
   IconMapPin,
   IconLink,
   IconCalendar,
-  IconPin,
-  IconHeart,
-  IconMessageCircle,
-  IconRepeat,
-  IconBookmark,
   IconHash,
   IconX,
   IconCamera,
@@ -91,7 +84,6 @@ function mapApiUser(apiUser) {
 
 
 export default function MyProfile() {
-  const [fetchError, setFetchError] = useState(null);
   const [postsError, setPostsError] = useState(null);
   const [uploadError, setUploadError] = useState(null);
   const [uploading, setUploading] = useState(false);
@@ -105,7 +97,7 @@ export default function MyProfile() {
   const [myPosts, setMyPosts] = useState([]);
   const { setMyImage, setMyName } = useContext(AuthContext);
 
-  const { data: profileResponse, isLoading: loading, error: profileError } = useQuery({
+  const { data: profileResponse, isLoading: loading, error: profileError, refetch: refetchProfile } = useQuery({
     queryKey: ['profile'],
     queryFn: async () => {
       const response = await getProfile();
@@ -114,14 +106,6 @@ export default function MyProfile() {
       return response;
     },
   })
-
-  useEffect(() => {
-    if (profileError) {
-      setFetchError(profileError.response?.data?.message || profileError.message || "Failed to load profile");
-    } else {
-      setFetchError(null);
-    }
-  }, [profileError]);
 
   useEffect(() => {
     return () => {
@@ -133,10 +117,6 @@ export default function MyProfile() {
 
   function openFilePicker() {
     setAvatarOptionsOpen((open) => !open);
-  }
-
-  function closeAvatarOptions() {
-    setAvatarOptionsOpen(false);
   }
 
   function closeAvatarPreview() {
@@ -195,9 +175,8 @@ export default function MyProfile() {
     try {
       const formData = new FormData();
       formData.append("photo", selectedFile);
-
       await uploadProfilePicture(formData);
-      await loadProfile();
+      if (typeof refetchProfile === 'function') await refetchProfile();
       cancelPhotoSelection();
     } catch (err) {
       console.error("Error uploading profile picture:", err);
@@ -206,7 +185,6 @@ export default function MyProfile() {
       setUploading(false);
     }
   }
-
 
   useEffect(() => {
     let mounted = true;
@@ -256,6 +234,9 @@ export default function MyProfile() {
 
   const apiUser = profileResponse?.data?.user ?? profileResponse?.user ?? profileResponse?.data ?? null;
   const profileUser = mapApiUser(apiUser) ?? DEFAULT_USER;
+  const fetchError = profileError
+    ? profileError.response?.data?.message || profileError.message || "Failed to load profile"
+    : null;
   const avatarSrc = previewUrl || profileUser.photo || "";
   const firstName = profileUser.name?.split(" ")[0] || "User";
   const initials = getInitials(profileUser.name);

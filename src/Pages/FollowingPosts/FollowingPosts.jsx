@@ -206,7 +206,7 @@ export default function FollowingPosts() {
                                 className="h-10 w-10 rounded-xl object-cover!"
                             />
                         ) : (
-                            <div className="h-10 w-10 rounded-xl bg-[#ff6b5b] text-sm font-semibold text-[#2a0f0a] flex items-center justify-center">
+                            <div className="avatar-fallback h-10 w-10 rounded-xl text-sm font-semibold flex items-center justify-center">
                                 {initials}
                             </div>
                         )}

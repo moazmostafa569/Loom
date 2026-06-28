@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     IconHeart,
     IconMessageCircle,
@@ -6,9 +7,9 @@ import {
     IconAt,
     IconRepeat,
     IconArrowForwardUp,
+    IconBell,
     IconBellOff,
     IconChecks,
-    IconRefresh,
 } from "@tabler/icons-react";
 import {
     getNotifications,
@@ -27,8 +28,70 @@ const TYPE_CONFIG = {
     share: { icon: IconRepeat, cls: "share", label: "shared your post" },
 };
 
+const DEFAULT_TYPE_CONFIG = {
+    icon: IconBell,
+    cls: "default",
+    label: "interacted with your post",
+};
+
+function parseNotificationsList(res) {
+    if (Array.isArray(res?.data?.notifications)) return res.data.notifications;
+    if (Array.isArray(res?.data)) return res.data;
+    if (Array.isArray(res?.notifications)) return res.notifications;
+    return [];
+}
+
+const POST_LINK_TYPES = new Set(["like", "comment", "reply", "mention", "share"]);
+
+function extractPostId(notif) {
+    return (
+        notif?.post?._id ??
+        notif?.post?.id ??
+        notif?.postId ??
+        notif?.post_id ??
+        (typeof notif?.post === "string" ? notif.post : null)
+    );
+}
+
+function extractSenderId(notif) {
+    return (
+        notif?.sender?._id ??
+        notif?.sender?.id ??
+        notif?.senderId ??
+        notif?.sender_id
+    );
+}
+
+const TYPE_ALIASES = {
+    liked: "like",
+    likes: "like",
+    commented: "comment",
+    comments: "comment",
+    replied: "reply",
+    replies: "reply",
+    followed: "follow",
+    follows: "follow",
+    follower: "follow",
+    mentioned: "mention",
+    mentions: "mention",
+    shared: "share",
+    shares: "share",
+    repost: "share",
+    reposted: "share",
+};
+
 const TABS = ["All", "Unread", "Likes", "Comments", "Follows"];
 const TAB_TYPE_MAP = { Likes: "like", Comments: "comment", Follows: "follow" };
+
+function normalizeNotificationType(type) {
+    const key = String(type ?? "").trim().toLowerCase();
+    return TYPE_ALIASES[key] ?? key;
+}
+
+function getTypeConfig(type) {
+    const normalized = normalizeNotificationType(type);
+    return TYPE_CONFIG[normalized] ?? DEFAULT_TYPE_CONFIG;
+}
 
 function relativeTime(iso) {
     const diff = (Date.now() - new Date(iso)) / 1000;
@@ -66,18 +129,38 @@ function Skeleton() {
     );
 }
 
-function NotifItem({ notif, onRead, following, onFollow }) {
-    const cfg = TYPE_CONFIG[notif.type] ?? TYPE_CONFIG.like;
+function NotifItem({ notif, onRead, following, onFollow, onNavigate, onClose }) {
+    const cfg = getTypeConfig(notif.type);
+    const normalizedType = normalizeNotificationType(notif.type);
     const Icon = cfg.icon;
     const initials = notif.sender?.initials ?? notif.sender?.name?.slice(0, 2).toUpperCase() ?? "??";
     const color = notif.sender?.color ?? "coral";
+    const postId = extractPostId(notif);
+    const senderId = extractSenderId(notif);
+    const isPostNavigable = POST_LINK_TYPES.has(normalizedType) && Boolean(postId);
+    const isFollowNavigable = normalizedType === "follow" && Boolean(senderId);
+    const isNavigable = isPostNavigable || isFollowNavigable;
 
     function handleClick() {
         if (!notif.isRead) onRead(notif._id);
+
+        if (isFollowNavigable) {
+            onNavigate?.(`/user_profile/${senderId}`);
+            onClose?.();
+            return;
+        }
+
+        if (isPostNavigable) {
+            onNavigate?.(`/posts/${postId}`);
+            onClose?.();
+        }
     }
 
     return (
-        <div className={`notif-item${notif.isRead ? "" : " unread"}`} onClick={handleClick}>
+        <div
+            className={`notif-item${notif.isRead ? "" : " unread"}${isNavigable ? " notif-item--link" : ""}`}
+            onClick={handleClick}
+        >
             <div className="notif-avatars">
                 <div className={`notif-av av-${color}`}>{initials}</div>
                 <div className={`notif-type-icon ${cfg.cls}`}>
@@ -99,12 +182,12 @@ function NotifItem({ notif, onRead, following, onFollow }) {
             </div>
             <div className="notif-right">
                 {!notif.isRead && <span className="notif-dot" />}
-                {notif.type === "follow" && (
+                {normalizedType === "follow" && (
                     <button
-                        className={`notif-follow-btn${following[notif.sender?._id] ? " following" : ""}`}
-                        onClick={(e) => { e.stopPropagation(); onFollow(notif.sender?._id); }}
+                        className={`notif-follow-btn${following[senderId] ? " following" : ""}`}
+                        onClick={(e) => { e.stopPropagation(); onFollow(senderId); }}
                     >
-                        {following[notif.sender?._id] ? "Following" : "Follow back"}
+                        {following[senderId] ? "Following" : "Follow back"}
                     </button>
                 )}
             </div>
@@ -112,7 +195,8 @@ function NotifItem({ notif, onRead, following, onFollow }) {
     );
 }
 
-export default function NotificationsPanel({ token, unreadCount, onUnreadCountChange, panelRef }) {
+export default function NotificationsPanel({ token, unreadCount, onUnreadCountChange, panelRef, onClose }) {
+    const navigate = useNavigate();
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
     const [marking, setMarking] = useState(false);
@@ -126,23 +210,25 @@ export default function NotificationsPanel({ token, unreadCount, onUnreadCountCh
         try {
             let data;
             if (token) {
-                const unreadOnly = activeTab === "Unread";
-                const res = await getNotifications(token, { unread: unreadOnly, page: p, limit: 8 });
-                data = Array.isArray(res.data) ? res.data : [];
-                setHasMore(p < (res.pagination?.numberOfPages ?? 1));
+                const res = await getNotifications(token, { unread: false, page: p, limit: 8 });
+                data = parseNotificationsList(res);
+                const pagination = res?.meta?.pagination ?? res?.pagination ?? null;
+                setHasMore(p < (pagination?.numberOfPages ?? 1));
             } else {
                 await new Promise((resolve) => setTimeout(resolve, 500));
                 data = [];
                 setHasMore(false);
             }
-            setNotifications((prev) => replace ? data : [...prev, ...data]);
+            setNotifications((prev) => (replace ? data : [...prev, ...data]));
         } catch {
-            setNotifications([]);
+            if (replace) {
+                setNotifications([]);
+            }
             setHasMore(false);
         } finally {
             setLoading(false);
         }
-    }, [activeTab, token]);
+    }, [token]);
 
     const fetchUnread = useCallback(async () => {
         if (!token) {
@@ -204,16 +290,17 @@ export default function NotificationsPanel({ token, unreadCount, onUnreadCountCh
 
     const filtered = safeNotifications.filter((n) => {
         if (activeTab === "Unread") return !n.isRead;
-        if (TAB_TYPE_MAP[activeTab]) return n.type === TAB_TYPE_MAP[activeTab];
+        const tabType = TAB_TYPE_MAP[activeTab];
+        if (tabType) return normalizeNotificationType(n.type) === tabType;
         return true;
     });
 
     const TAB_COUNTS = {
         All: safeNotifications.length,
         Unread: safeNotifications.filter((n) => !n.isRead).length,
-        Likes: safeNotifications.filter((n) => n.type === "like").length,
-        Comments: safeNotifications.filter((n) => n.type === "comment").length,
-        Follows: safeNotifications.filter((n) => n.type === "follow").length,
+        Likes: safeNotifications.filter((n) => normalizeNotificationType(n.type) === "like").length,
+        Comments: safeNotifications.filter((n) => normalizeNotificationType(n.type) === "comment").length,
+        Follows: safeNotifications.filter((n) => normalizeNotificationType(n.type) === "follow").length,
     };
 
     const grouped = groupByDate(filtered);
@@ -272,6 +359,8 @@ export default function NotificationsPanel({ token, unreadCount, onUnreadCountCh
                                         onRead={handleMarkOne}
                                         following={following}
                                         onFollow={handleFollow}
+                                        onNavigate={navigate}
+                                        onClose={onClose}
                                     />
                                 ))}
                             </div>

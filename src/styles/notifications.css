@@ -30,7 +30,7 @@
 .notif-header {
   position: sticky;
   top: 0;
-  background: rgba(21, 19, 28, .92);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(6px);
   padding: 22px 28px 0;
   z-index: 5;
@@ -166,11 +166,15 @@
 }
 
 .notif-item:hover {
-  background: rgba(245, 243, 240, .03);
+  background: color-mix(in srgb, var(--text) 3%, transparent);
 }
 
 .notif-item.unread {
-  background: rgba(255, 107, 91, .04);
+  background: var(--coral-dim);
+}
+
+.notif-item--link {
+  cursor: pointer;
 }
 
 .notif-item.unread::before {
@@ -281,6 +285,11 @@
 }
 
 .notif-type-icon.share {
+  background: var(--surface-3);
+  color: var(--text-dim);
+}
+
+.notif-type-icon.default {
   background: var(--surface-3);
   color: var(--text-dim);
 }
@@ -500,7 +509,7 @@
 .notif-panel-inner {
   width: min(100%, 420px);
   max-height: min(84vh, 640px);
-  background: rgba(21, 19, 28, 0.98);
+  background: color-mix(in srgb, var(--bg) 98%, transparent);
   border: 1px solid var(--border);
   border-radius: 24px 24px 0 0;
   overflow: hidden;
@@ -512,7 +521,7 @@
 .notif-panel-header {
   padding: 20px 20px 0;
   border-bottom: 1px solid var(--border);
-  background: rgba(21, 19, 28, 0.98);
+  background: color-mix(in srgb, var(--bg) 98%, transparent);
 }
 
 .notif-panel-title-row {
@@ -538,8 +547,8 @@
   .notif-panel {
     position: absolute;
     bottom: auto;
-    left: auto;
-    right: 100%;
+    left:  100%;
+    right: auto;
     top: 20px;
     width: min(420px, 400px);
     padding: 0;

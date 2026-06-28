@@ -15,6 +15,16 @@
     rel="stylesheet" />
 
   <title>Loom</title>
+  <script>
+    (function () {
+      var preference = localStorage.getItem('loom-theme') || 'dark';
+      var resolved = preference === 'auto'
+        ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+        : (preference === 'light' ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme', resolved);
+      document.documentElement.dataset.themePreference = preference;
+    })();
+  </script>
 </head>
 
 <body>

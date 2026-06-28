@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { sendPasswordResetEmail } from 'firebase/auth'
-import { auth } from '../firebaseConfig'
+import axios from 'axios'
 import { toast } from 'react-toastify'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -24,15 +23,17 @@ export default function ForgotPassword() {
     setSuccessMessage('')
 
     try {
-      await sendPasswordResetEmail(auth, data.email)
-      const message = 'Password reset instructions have been sent to your email.'
+      const API_BASE = import.meta.env.VITE_BASE_URL || 'https://route-posts.routemisr.com'
+      // Attempt to use backend reset endpoint
+      await axios.post(`${API_BASE}/users/forgot-password`, { email: data.email }, { headers: { 'Content-Type': 'application/json' } })
+      const message = 'Password reset instructions have been sent to your email (if the address exists).'
       toast.success(message)
       setSuccessMessage(message)
       setTimeout(() => {
         navigate('/login')
       }, 1800)
     } catch (error) {
-      const errorMessage = error.message || 'Failed to send password reset email.'
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to send password reset email.'
       toast.error(errorMessage)
       setApiError(errorMessage)
       console.error('forgot password error', error)

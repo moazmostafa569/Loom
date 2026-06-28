@@ -30,7 +30,7 @@
 .saved-header {
   position: sticky;
   top: 0;
-  background: rgba(21, 19, 28, .92);
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(6px);
   padding: 22px 28px 0;
   z-index: 5;

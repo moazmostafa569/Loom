@@ -1,26 +1,3 @@
-:root {
-    --bg: #15131c;
-    --surface: #1e1b28;
-    --surface-2: #262232;
-    --surface-3: #332d44;
-    --border: rgba(245, 243, 240, .08);
-    --border-strong: rgba(245, 243, 240, .16);
-    --coral: #ff6b5b;
-    --coral-dim: rgba(255, 107, 91, .14);
-    --mint: #8fe3c0;
-    --mint-dim: rgba(143, 227, 192, .14);
-    --gold: #f4c95d;
-    --gold-dim: rgba(244, 201, 93, .14);
-    --lav: #b9a8f0;
-    --lav-dim: rgba(185, 168, 240, .14);
-    --text: #f5f3f0;
-    --text-dim: #9b97a8;
-    --text-faint: #5e5a6e;
-    --radius-sm: 10px;
-    --radius: 18px;
-    --radius-lg: 28px;
-}
-
 * {
     box-sizing: border-box;
     margin: 0;
@@ -63,7 +40,7 @@ body {
     position: sticky;
     top: 0;
     left: 0;
-    background: rgba(21, 19, 28, .92);
+    background: color-mix(in srgb, var(--bg) 92%, transparent);
     backdrop-filter: blur(6px);
     padding: 22px 28px 0;
     z-index: 5;
@@ -77,9 +54,10 @@ body {
 }
 
 .feed-header h1 {
-    font-family: 'Fraunces', serif;
+    font-family: var(--font-display);
     font-weight: 500;
     font-size: 24px;
+    color: var(--text);
 }
 
 .tabs {
@@ -100,6 +78,14 @@ body {
     color: var(--text);
     border-color: var(--coral);
     font-weight: 500;
+}
+
+[data-theme="light"] .feed-header {
+    background: color-mix(in srgb, var(--bg) 94%, transparent);
+}
+
+[data-theme="light"] .tab.active {
+    color: var(--coral);
 }
 
 .compose-card {

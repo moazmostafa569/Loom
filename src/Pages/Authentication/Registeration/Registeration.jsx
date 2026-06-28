@@ -1,19 +1,15 @@
-import React, { useState, useEffect, useContext } from 'react'
+import { useState } from 'react'
 import './../../../index.css'
-import { IconSparkles, IconEye, IconEyeOff, IconBrandGoogle, IconBrandApple, IconArrowRight } from '@tabler/icons-react'
+import { IconSparkles, IconEye, IconEyeOff, IconArrowRight } from '@tabler/icons-react'
 import { useForm } from 'react-hook-form'
 import { registrationSchema } from '../../../utils/authschema';
 import { zodResolver } from '../../../utils/zodResolver';
 import { registerUser } from '../../../services/authServices';
-import { setStoredUserId } from '../../../utils/UserDetails'
-import { signInWithGoogle } from '../firebaseConfig';
 import { toast } from 'react-toastify';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@heroui/react';
-import { AuthContext } from '../../../context/Authcontext';
 export default function Registeration() {
   const navigate = useNavigate()
-  const { setToken, setEmail, setUserId, setMyName, setMyImage } = useContext(AuthContext)
   const [showPassword, setShowPassword] = useState(false)
   const [showRePassword, setShowRePassword] = useState(false)
   const [apiError, setApiError] = useState('')
@@ -23,7 +19,7 @@ export default function Registeration() {
     return isNaN(s) ? 1 : Math.min(3, Math.max(1, s))
   })
 
-  let { register, handleSubmit, watch, formState: { errors, isSubmitting } } = useForm({
+  let { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     mode: 'onChange',
     resolver: zodResolver(registrationSchema),
     defaultValues: {
@@ -56,7 +52,7 @@ export default function Registeration() {
       console.log(message)
       const next = Math.min(3, currentStep + 1)
       setCurrentStep(next)
-      try { localStorage.setItem('registrationStep', String(next)) } catch (e) { }
+      try { localStorage.setItem('registrationStep', String(next)) } catch { /* ignore storage errors */ }
     } catch (error) {
       const responseData = error.response?.data
       let errorMessage = responseData?.message || responseData?.errors || responseData || error.message
@@ -68,39 +64,6 @@ export default function Registeration() {
       console.error('signup error', responseData || error)
     }
   }
-
-  async function handleGoogleSignIn() {
-    try {
-      const result = await signInWithGoogle()
-      const firebaseToken = await result.user.getIdToken()
-      const userIdValue = result.user.uid
-      const userEmailValue = result.user.email || ''
-      const userNameValue = result.user.displayName || ''
-      const userImageValue = result.user.photoURL || ''
-
-      localStorage.setItem('user-token', firebaseToken)
-      localStorage.setItem('user-id', userIdValue)
-      localStorage.setItem('user-email', userEmailValue)
-      localStorage.setItem('user-name', userNameValue)
-      setStoredUserId(userIdValue)
-      setToken(firebaseToken)
-      setUserId(userIdValue)
-      setEmail(userEmailValue)
-      setMyName(userNameValue)
-      setMyImage(userImageValue)
-
-      toast.success(`Signed in as ${userNameValue || userEmailValue}`)
-      navigate('/')
-    } catch (error) {
-      console.error('Google sign-in error:', error)
-      toast.error('Google sign-in failed')
-    }
-  }
-
-
-
-
-
 
   return <>
     <div className='min-h-screen bg-[#0b0a11]'>
@@ -219,10 +182,6 @@ export default function Registeration() {
                 <span>{apiError}</span>
               </div>
             )}
-            <div className="divider">or continue with</div>
-            <div className="flex justify-center">
-              <button type="button" onClick={handleGoogleSignIn} className="social-btn w-full"><IconBrandGoogle size={16} /> Google</button>
-            </div>
             <div className="foot">Already have an account? <Link to="/login">Sign in</Link></div>
           </div>
         </form>

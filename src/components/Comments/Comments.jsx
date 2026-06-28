@@ -547,18 +547,18 @@ function Comment({ comment, currentUserId, isLast, onReplyClick, onReplySubmit, 
                 <IconDotsVertical size={15} />
               </button>
               {showDropdown && (
-                <div className="rail__dropdown absolute top-5 right-6 bg-primary rounded-2xl shadow-lg p-5 z-50">
+                <div className="rail__dropdown absolute top-5 right-6 rounded-2xl shadow-lg p-5 z-50">
                   <button
                     type="button"
                     onClick={startEditing}
-                    className="rail__dropdown-btn w-full text-left px-4 py-3 text-gray-700 cursor-pointer hover:bg-gray-300 rounded-lg mb-2 transition"
+                    className="rail__dropdown-btn w-full text-left px-4 py-3 cursor-pointer rounded-lg mb-2 transition"
                   >
                     Edit
                   </button>
                   <button
                     type="button"
                     onClick={handleDeleteComment}
-                    className="rail__dropdown-btn w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-300 cursor-pointer rounded-lg transition"
+                    className="rail__dropdown-btn rail__dropdown-btn--danger w-full text-left px-4 py-3 cursor-pointer rounded-lg transition"
                   >
                     Delete
                   </button>

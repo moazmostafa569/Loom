@@ -25,18 +25,30 @@
     padding-top: 12px;
     padding-bottom: 12px;
     text-align: left;
+    color: var(--text);
+    background: transparent;
+    border: none;
+    cursor: pointer;
 }
 
-/* Editing UI styling */
+.rail__dropdown-btn:hover {
+    background: var(--surface-2);
+}
+
+.rail__dropdown-btn--danger:hover {
+    background: var(--coral-dim);
+    color: var(--coral);
+}
+
 .post-editing {
     margin-bottom: 1rem;
 }
 .post-edit-input {
     width: 100%;
     min-height: 120px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.04);
-    color: #f5f3f0;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-2);
+    color: var(--text);
     border-radius: 1rem;
     padding: 14px 16px;
     resize: vertical;
@@ -57,21 +69,20 @@
     cursor: pointer;
 }
 .edit-save-btn {
-    background: #8fe3c0;
-    color: #0d1f14;
+    background: var(--mint);
+    color: var(--mint-dark);
     border-color: transparent;
 }
 .edit-cancel-btn {
-    background: rgba(255,255,255,0.06);
-    color: #f5f3f0;
-    border-color: rgba(255,255,255,0.16);
+    background: var(--surface-2);
+    color: var(--text);
+    border-color: var(--border-strong);
 }
 .edit-save-btn:hover,
 .edit-cancel-btn:hover {
     filter: brightness(1.05);
 }
 
-/* Repost attribution styling */
 .post-repost-banner {
     display: inline-flex;
     align-items: center;
@@ -102,8 +113,8 @@
     height: 13px;
 }
 
-/* Saved post bookmark styling */
-svg.saved {
+svg.saved,
+.act .liked {
     fill: currentColor;
-    color: #FF6B6B;
+    color: var(--coral);
 }

@@ -363,13 +363,13 @@ export default function PostCard({ post, onDelete }) {
             <IconMenu2 onClick={() => setShowDropdown(!showDropdown)} className='cursor-pointer' stroke={2} />
 
             {showDropdown && (
-              <div className="rail__dropdown absolute top-5 right-6 bg-primary rounded-2xl shadow-lg p-5 z-50">
-                <button onClick={openPostInNewTab} className="rail__dropdown-btn w-full text-left px-4 py-3 text-gray-700 cursor-pointer hover:bg-gray-300 rounded-lg mb-2 transition">
+              <div className="rail__dropdown absolute top-5 right-6 rounded-2xl shadow-lg p-5 z-50">
+                <button onClick={openPostInNewTab} className="rail__dropdown-btn w-full text-left px-4 py-3 cursor-pointer rounded-lg mb-2 transition">
                   Open in new tab
                 </button>
                 <button
                   onClick={copyPostLink}
-                  className="rail__dropdown-btn w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-300 cursor-pointer rounded-lg transition"
+                  className="rail__dropdown-btn w-full text-left px-4 py-3 cursor-pointer rounded-lg transition"
                 >
                   Copy link
                 </button>
@@ -380,13 +380,13 @@ export default function PostCard({ post, onDelete }) {
                         setIsEditing(true);
                         setShowDropdown(false);
                       }}
-                      className="rail__dropdown-btn w-full text-left px-4 py-3 text-gray-700 hover:bg-gray-300 cursor-pointer rounded-lg transition"
+                      className="rail__dropdown-btn w-full text-left px-4 py-3 cursor-pointer rounded-lg transition"
                     >
                       Edit
                     </button>
                     <button
                       onClick={handleDeletePost}
-                      className="rail__dropdown-btn w-full text-left px-4 py-3 text-gray-700 hover:bg-red-100 cursor-pointer rounded-lg transition"
+                      className="rail__dropdown-btn rail__dropdown-btn--danger w-full text-left px-4 py-3 cursor-pointer rounded-lg transition"
                     >
                       Delete
                     </button>
@@ -456,7 +456,7 @@ export default function PostCard({ post, onDelete }) {
         )}
         <div className="post-actions">
           <div className="act cursor-pointer" onClick={toggleLike}>
-            <IconHeart stroke={2} style={{ color: isLiked ? '#ff6b5b' : undefined }} /> {likesCount}
+            <IconHeart stroke={2} className={isLiked ? 'liked' : ''} /> {likesCount}
           </div>
           <div onClick={() => fetchAllComments(postId)} className="act cursor-pointer"><IconMessageCircle stroke={2} /> {totalCommentsAndReplies}</div>
           <div

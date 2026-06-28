@@ -3,6 +3,8 @@
    All requests require Authorization: Bearer <token> header.
 ---------------------------------------------------------------- */
 
+import axios from "axios";
+
 const BASE = "https://route-posts.routemisr.com";
 
 function authHeaders(token) {
@@ -37,16 +39,17 @@ function authHeaders(token) {
  *    }
  */
 export async function getNotifications(token, { unread = false, page = 1, limit = 10 } = {}) {
-  const params = new URLSearchParams({ unread: String(unread), page: String(page), limit: String(limit) });
-  const res = await fetch(`${BASE}/notifications?${params}`, {
-    method: "GET",
+  const res = await axios.get(`${BASE}/notifications`, {
+    params: { unread, page, limit },
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error(`getNotifications failed: ${res.status}`);
-  return res.json();
+
+  console.log("[getNotifications] response:", res.data);
+  return res.data;
 }
 
 /**
+ * https://route-posts.routemisr.com/notifications?unread=false&page=1&limit=10
  * 2. GET /notifications/unread-count
  *    Returns the number of unread notifications.
  *
@@ -57,12 +60,12 @@ export async function getNotifications(token, { unread = false, page = 1, limit 
  *    }
  */
 export async function getUnreadCount(token) {
-  const res = await fetch(`${BASE}/notifications/unread-count`, {
-    method: "GET",
+  const res = await axios.get(`${BASE}/notifications/unread-count`, {
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error(`getUnreadCount failed: ${res.status}`);
-  return res.json();
+
+  console.log("[getUnreadCount] response:", res.data);
+  return res.data;
 }
 
 /**
@@ -76,12 +79,12 @@ export async function getUnreadCount(token) {
  *    }
  */
 export async function markOneRead(token, notificationId) {
-  const res = await fetch(`${BASE}/notifications/${notificationId}/read`, {
-    method: "PATCH",
+  const res = await axios.patch(`${BASE}/notifications/${notificationId}/read`, {}, {
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error(`markOneRead failed: ${res.status}`);
-  return res.json();
+
+  console.log("[markOneRead] response:", res.data);
+  return res.data;
 }
 
 /**
@@ -95,10 +98,10 @@ export async function markOneRead(token, notificationId) {
  *    }
  */
 export async function markAllRead(token) {
-  const res = await fetch(`${BASE}/notifications/read-all`, {
-    method: "PATCH",
+  const res = await axios.patch(`${BASE}/notifications/read-all`, {}, {
     headers: authHeaders(token),
   });
-  if (!res.ok) throw new Error(`markAllRead failed: ${res.status}`);
-  return res.json();
+
+  console.log("[markAllRead] response:", res.data);
+  return res.data;
 }

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from 'react'
+import { useContext, useState } from 'react'
 import './../../../styles/Login.css'
 import './../../../index.css'
 import { useForm } from 'react-hook-form'
@@ -6,10 +6,8 @@ import { zodResolver } from '../../../utils/zodResolver'
 import { loginSchema } from '../../../utils/authschema'
 import { loginUser } from '../../../services/authServices'
 import { setStoredUserId } from '../../../utils/UserDetails'
-import { signInWithGoogle } from '../firebaseConfig'
 import { toast } from 'react-toastify'
 import { useNavigate, Link } from 'react-router-dom'
-import { IconBrandGoogle } from '@tabler/icons-react'
 import { AuthContext } from './../../../context/Authcontext';
 
 export default function Login() {
@@ -33,7 +31,10 @@ export default function Login() {
     try {
       const response = await loginUser(data)
       const tokenValue = response.data?.token
-      const userIdValue = response.data?.user?._id || response.data?.user?.id
+      const apiUser = response.data?.user ?? response.user ?? null
+      const userIdValue = apiUser?._id || apiUser?.id
+      const userName = apiUser?.name || apiUser?.fullname || ''
+      const userPhoto = String(apiUser?.photo || apiUser?.avatar || apiUser?.image || '').trim()
 
       localStorage.setItem('user-token', tokenValue)
       localStorage.setItem('user-email', data.email)
@@ -41,6 +42,14 @@ export default function Login() {
         localStorage.setItem('user-id', userIdValue)
         setStoredUserId(userIdValue)
         setUserId(userIdValue)
+      }
+      if (userName) {
+        localStorage.setItem('user-name', userName)
+        setMyName(userName)
+      }
+      if (userPhoto) {
+        localStorage.setItem('user-image', userPhoto)
+        setMyImage(userPhoto)
       }
       const message = response?.message || 'Login success'
       toast.success(message)
@@ -57,34 +66,6 @@ export default function Login() {
       toast.error(errorMessage)
       setApiError(errorMessage)
       console.error('login error', responseData || error)
-    }
-  }
-
-  async function handleGoogleSignIn() {
-    try {
-      const result = await signInWithGoogle()
-      const firebaseToken = await result.user.getIdToken()
-      const userIdValue = result.user.uid
-      const userEmailValue = result.user.email || ''
-      const userNameValue = result.user.displayName || ''
-      const userImageValue = result.user.photoURL || ''
-
-      localStorage.setItem('user-token', firebaseToken)
-      localStorage.setItem('user-id', userIdValue)
-      localStorage.setItem('user-email', userEmailValue)
-      localStorage.setItem('user-name', userNameValue)
-      setStoredUserId(userIdValue)
-      setToken(firebaseToken)
-      setUserId(userIdValue)
-      setEmail(userEmailValue)
-      setMyName(userNameValue)
-      setMyImage(userImageValue)
-
-      toast.success(`Signed in as ${userNameValue || userEmailValue}`)
-      navigate('/')
-    } catch (error) {
-      console.error('Google sign-in error:', error)
-      toast.error('Google sign-in failed')
     }
   }
 
@@ -145,10 +126,6 @@ export default function Login() {
             {apiError && <p className="error-message">{apiError}</p>}
           </form>
 
-          <div className="divider">or continue with</div>
-          <div className="flex justify-center">
-            <button type="button" onClick={handleGoogleSignIn} className="social-btn w-full"><IconBrandGoogle size={16} /> Google</button>
-          </div>
           <div className="foot">New to Loom? <Link to="/registration">Create an account</Link></div>
         </div>
       </div>

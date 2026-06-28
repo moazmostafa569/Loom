@@ -1,7 +1,5 @@
 import axios from "axios";
 
-const baseurl = import.meta.env.VITE_BASE_URL
-
 export async function registerUser(body) {
     let {data} = await axios.post('https://route-posts.routemisr.com/users/signup', body, {
         headers:{
@@ -19,17 +17,29 @@ export async function loginUser(body) {
     return data;
 }
 
-export async function changePassword(body) {
-    const token = localStorage.getItem('user-token')
-    if (!token) {
-        throw new Error('Authentication token not found. Please log in again.')
-    }
+export async function changePassword({ password, newPassword }) {
+  const token = localStorage.getItem('user-token');
+  if (!token) {
+    throw new Error('Authentication token not found. Please log in again.');
+  }
 
-    let {data} = await axios.patch('https://route-posts.routemisr.com/users/change-password', body, {
+  const payload = { password, newPassword };
+
+  try {
+    const { data } = await axios.patch(
+      'https://route-posts.routemisr.com/users/change-password',
+      payload,
+      {
         headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-    })
+      }
+    );
+    console.log('[changePassword] response:', data);
     return data;
+  } catch (error) {
+    console.error('[changePassword] error:', error.response?.data ?? error.message);
+    throw error;
+  }
 }
