@@ -1,6 +1,14 @@
 import { toast } from "react-toastify";
 import { createComment } from "../services/AllComents";
 
+export const DEFAULT_AVATAR_URL = 'https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png';
+
+export function getAvatarPhoto(value) {
+  const photo = String(value || '').trim();
+  if (!photo || photo === DEFAULT_AVATAR_URL || photo.includes('/linkedPosts/default-profile.png')) return '';
+  return photo;
+}
+
 export function formatPostTime(value) {
   if (!value) return '· 12m';
   const created = new Date(value);

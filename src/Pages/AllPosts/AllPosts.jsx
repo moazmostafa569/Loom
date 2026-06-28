@@ -10,7 +10,7 @@ import { Giphy } from 'gif-picker-react/providers/giphy';
 import PostCard from '../../components/PostCard/PostCard';
 import { Skeleton } from './Skeleton/Skeleton';
 import { getAllComments } from '../../services/AllComents';
-import { getInitials } from '../../utils/PostCard';
+import { getAvatarPhoto, getInitials } from '../../utils/PostCard';
 import { AuthContext } from '../../context/Authcontext';
 import EmojiPicker from 'emoji-picker-react';
 
@@ -105,9 +105,9 @@ export default function AllPosts() {
 
   const [followState, setFollowState] = useState({})
   const DEFAULT_AVATAR_URL = 'https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png';
-  let { myImage, myName } = useContext(AuthContext)
-  const avatarSrc = myImage?.trim() || ''
-  const avatarName = myName?.trim() || ''
+  let { email, myImage, myName } = useContext(AuthContext)
+  const avatarSrc = getAvatarPhoto(myImage)
+  const avatarName = myName?.trim() || email || 'User'
   const initials = getInitials(avatarName)
 
   const { data: postsData, isLoading } = useQuery({

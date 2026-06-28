@@ -15,7 +15,7 @@ import { changePassword } from "../../services/authServices";
 import { settingsChangePasswordSchema } from "../../utils/authschema";
 import { zodResolver } from "../../utils/zodResolver";
 import { getInitials } from "../../utils/PostCard";
-import { getThemePreference, setThemePreference } from "../../utils/theme";
+import { applyTheme, getThemePreference, setThemePreference } from "../../utils/theme";
 
 const SECTIONS = [
   { id: "account", label: "Account", icon: IconUser },
@@ -123,12 +123,17 @@ export default function Settings() {
   });
 
   const [theme, setTheme] = useState(() => getThemePreference());
+  const [savedTheme, setSavedTheme] = useState(() => getThemePreference());
+
+  useEffect(() => {
+    return () => applyTheme(getThemePreference());
+  }, []);
 
   useEffect(() => {
     if (theme !== "auto") return undefined;
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: light)");
-    const handleChange = () => setThemePreference("auto");
+    const handleChange = () => applyTheme("auto");
 
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
@@ -136,7 +141,18 @@ export default function Settings() {
 
   function handleThemeChange(nextTheme) {
     setTheme(nextTheme);
-    setThemePreference(nextTheme);
+    applyTheme(nextTheme);
+  }
+
+  function handleCancelChanges() {
+    setTheme(savedTheme);
+    applyTheme(savedTheme);
+  }
+
+  function handleSaveChanges() {
+    setThemePreference(theme);
+    setSavedTheme(theme);
+    toast.success("Settings saved.");
   }
 
   const { data: profileResponse, isLoading: profileLoading, error: profileError } = useQuery({
@@ -410,6 +426,10 @@ export default function Settings() {
                 </div>
               </div>
 
+              <div className="save-bar">
+                <button type="button" className="btn-outline" onClick={handleCancelChanges}>Cancel</button>
+                <button type="button" className="btn-fill" onClick={handleSaveChanges}>Save changes</button>
+              </div>
             </>
           )}
 

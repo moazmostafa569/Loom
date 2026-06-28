@@ -6,6 +6,7 @@ import { zodResolver } from '../../../utils/zodResolver'
 import { loginSchema } from '../../../utils/authschema'
 import { loginUser } from '../../../services/authServices'
 import { setStoredUserId } from '../../../utils/UserDetails'
+import { getAvatarPhoto } from '../../../utils/PostCard'
 import { toast } from 'react-toastify'
 import { useNavigate, Link } from 'react-router-dom'
 import { AuthContext } from './../../../context/Authcontext';
@@ -34,7 +35,7 @@ export default function Login() {
       const apiUser = response.data?.user ?? response.user ?? null
       const userIdValue = apiUser?._id || apiUser?.id
       const userName = apiUser?.name || apiUser?.fullname || ''
-      const userPhoto = String(apiUser?.photo || apiUser?.avatar || apiUser?.image || '').trim()
+      const userPhoto = getAvatarPhoto(apiUser?.photo || apiUser?.avatar || apiUser?.image)
 
       localStorage.setItem('user-token', tokenValue)
       localStorage.setItem('user-email', data.email)
@@ -43,14 +44,10 @@ export default function Login() {
         setStoredUserId(userIdValue)
         setUserId(userIdValue)
       }
-      if (userName) {
-        localStorage.setItem('user-name', userName)
-        setMyName(userName)
-      }
-      if (userPhoto) {
-        localStorage.setItem('user-image', userPhoto)
-        setMyImage(userPhoto)
-      }
+      localStorage.setItem('user-name', userName)
+      setMyName(userName)
+      localStorage.setItem('user-image', userPhoto)
+      setMyImage(userPhoto)
       const message = response?.message || 'Login success'
       toast.success(message)
       setSuccessMessage(message)

@@ -9,6 +9,7 @@ import { createPost, getAllFollowingPosts, getFollowSuggestions, putFollowOrUnfo
 import PostCard from '../../components/PostCard/PostCard'
 import { Skeleton } from '../AllPosts/Skeleton/Skeleton'
 import { AuthContext } from '../../context/Authcontext';
+import { getAvatarPhoto } from '../../utils/PostCard';
 
 const DEFAULT_AVATAR_URL = 'https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png';
 
@@ -40,9 +41,9 @@ export default function FollowingPosts() {
     const gifPickerRef = useRef(null)
     const giphyApiKey = import.meta.env.VITE_GIPHY_API_KEY || ''
     const gifProvider = useMemo(() => (giphyApiKey ? Giphy(giphyApiKey) : null), [giphyApiKey])
-    let { myImage, myName } = useContext(AuthContext)
-    const avatarSrc = myImage?.trim() || ''
-    const avatarName = myName?.trim() || ''
+    let { email, myImage, myName } = useContext(AuthContext)
+    const avatarSrc = getAvatarPhoto(myImage)
+    const avatarName = myName?.trim() || email || 'User'
     const initials = getInitials(avatarName)
 
     const { data: followingPostsData, isLoading } = useQuery({

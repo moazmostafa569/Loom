@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import './../../styles/Navbar.css'
 import { IconHome,IconSettings2 , IconSearch, IconBell, IconBookmark, IconPlus } from '@tabler/icons-react'
 import { AuthContext } from '../../context/Authcontext'
-import { getInitials } from '../../utils/PostCard'
+import { getAvatarPhoto, getInitials } from '../../utils/PostCard'
 import { getUnreadCount } from '../../services/notificationsServices'
 import NotificationsPanel from '../Notifications/NotificationsPanel'
 export default function Navbar() {
@@ -34,7 +34,7 @@ export default function Navbar() {
   const directionClass = isArabicDevice ? '[direction:rtl] lg:[direction:ltr]' : ''
 
   const userEmail = email || 'user@example.com'
-  const avatarSrc = myImage?.trim() || ''
+  const avatarSrc = getAvatarPhoto(myImage)
   const avatarName = myName?.trim() || userEmail
   const initials = getInitials(avatarName)
 
