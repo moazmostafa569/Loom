@@ -410,10 +410,6 @@ export default function Settings() {
                 </div>
               </div>
 
-              <div className="save-bar">
-                <button type="button" className="btn-outline">Cancel</button>
-                <button type="button" className="btn-fill">Save changes</button>
-              </div>
             </>
           )}
 

@@ -114,7 +114,7 @@ export default function Navbar() {
             {avatarSrc ? (
               <img
                 src={avatarSrc}
-                alt={avatarName}
+                alt={initials}
                 className="h-10 w-10 rounded-xl object-cover!"
               />
             ) : (
