@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useContext } from "react";
 import {
   IconArrowUp,
   IconHeart,
@@ -11,23 +11,12 @@ import {
 import EmojiPicker from "emoji-picker-react";
 
 import "./../../styles/comments.css";
-import { formatPostTime, handleAddComment } from "../../utils/PostCard";
+import { formatPostTime, getAvatarPhoto, getInitials, handleAddComment } from "../../utils/PostCard";
 import { createReply, deleteComment, getReplies, ReactComment, UpdateComment } from "../../services/AllComents";
 import { List } from "./CommentsSkeleton/CommentsSkeleton";
 import { getStoredUserId } from "../../utils/UserDetails";
+import { AuthContext } from "../../context/Authcontext";
 const avatarColors = ["coral", "mint", "gold", "lav"];
-const DEFAULT_AVATAR_URL ="https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png";
-
-
-function getInitials(name) {
-  if (!name) return "U";
-  const parts = String(name).trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0].toUpperCase())
-    .join("");
-}
 
 
 
@@ -103,9 +92,7 @@ function isOwnedByCurrentUser(comment, currentUserId) {
 }
 
 function getAvatarUrl(user) {
-  const photo = String(user?.photo || user?.avatar || user?.image || "").trim();
-  if (!photo || photo === DEFAULT_AVATAR_URL) return "";
-  return photo;
+  return getAvatarPhoto(user?.photo || user?.avatar || user?.image);
 }
 
 
@@ -270,7 +257,7 @@ function Reply({ reply, currentUserId, postId }) {
 }
 
 /* ─── Single comment ───────────────────────────────────────── */
-function Comment({ comment, currentUserId, isLast, onReplyClick, onReplySubmit, onCommentUpdated, activeReplies = [], postId, onFetchReplies }) {
+function Comment({ comment, currentUserId, currentUserAvatar, isLast, onReplyClick, onReplySubmit, onCommentUpdated, activeReplies = [], postId, onFetchReplies }) {
   const [liked, setLiked] = useState(() => getCommentLiked(comment.rawComment ?? comment, currentUserId));
   const [likes, setLikes] = useState(() => getLikesCount(comment));
   const [replyingTo, setReplyingTo] = useState(false);
@@ -571,7 +558,13 @@ function Comment({ comment, currentUserId, isLast, onReplyClick, onReplySubmit, 
         {/* inline reply input */}
         {replyingTo && (
           <div className="comments__compose" style={{ paddingTop: 12 }}>
-            <Avatar initials="MM" color="coral" small />
+            <Avatar
+              initials={currentUserAvatar.initials}
+              color={currentUserAvatar.color}
+              small
+              src={currentUserAvatar.photo}
+              name={currentUserAvatar.name}
+            />
             <div className="comments__compose-body">
               <textarea
                 ref={replyRef}
@@ -650,7 +643,7 @@ function Comment({ comment, currentUserId, isLast, onReplyClick, onReplySubmit, 
 /* ─── Comments (main export) ───────────────────────────────── */
 export default function Comments({
   comments = [],
-  currentUser = { name: "Moaz Mostafa", handle: "mirasolano", initials: "MM", color: "coral" },
+  currentUser = {},
   // post id for posting new comments
   postId = null,
   // sheet props
@@ -673,6 +666,14 @@ export default function Comments({
   const [replyTargetId, setReplyTargetId] = useState(null);
   const [selectedReplies, setSelectedReplies] = useState([]);
   const currentUserId = getStoredUserId();
+  const { email, myImage, myName } = useContext(AuthContext);
+  const currentUserName = currentUser.name || myName || email || "User";
+  const currentUserAvatar = {
+    initials: currentUser.initials || getInitials(currentUserName),
+    color: currentUser.color || "coral",
+    photo: getAvatarPhoto(currentUser.photo || currentUser.avatar || currentUser.image || myImage),
+    name: currentUserName,
+  };
 
   const normalizedComments = useMemo(
     () =>
@@ -873,10 +874,23 @@ export default function Comments({
     commentTextareaRef.current?.focus();
   };
 
+  function removeCommentImage() {
+    if (commentImagePreview) {
+      URL.revokeObjectURL(commentImagePreview);
+    }
+    setCommentImage(null);
+    setCommentImagePreview("");
+  }
+
 
   const composeBox = (
     <div className="comments__compose">
-      <Avatar initials={currentUser.initials} color={currentUser.color} src={currentUser.photo || currentUser.avatar || currentUser.image || ""} />
+      <Avatar
+        initials={currentUserAvatar.initials}
+        color={currentUserAvatar.color}
+        src={currentUserAvatar.photo}
+        name={currentUserAvatar.name}
+      />
       <div className="comments__compose-body relative">
         <textarea
           ref={commentTextareaRef}
@@ -952,6 +966,7 @@ export default function Comments({
               key={comment.id}
               comment={comment}
               currentUserId={currentUserId}
+              currentUserAvatar={currentUserAvatar}
               isLast={index === displayedComments.length - 1}
               postId={postId}
               activeReplies={comment.id === replyTargetId ? selectedReplies : []}

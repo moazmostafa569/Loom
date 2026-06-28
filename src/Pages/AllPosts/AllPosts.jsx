@@ -31,7 +31,7 @@ export default function AllPosts() {
   const emojiPickerRef = useRef(null)
   const gifPickerRef = useRef(null)
 
-  const giphyApiKey = import.meta.env.VITE_GIPHY_API_KEY || ''
+  const giphyApiKey = String(import.meta.env.VITE_GIPHY_API_KEY || '').trim()
   const gifProvider = useMemo(() => (giphyApiKey ? Giphy(giphyApiKey) : null), [giphyApiKey])
 
   const handleEmojiToggle = () => {
@@ -47,6 +47,8 @@ export default function AllPosts() {
   }
 
   const handleGifs = () => {
+    if (!gifProvider) return
+
     setShowGifPicker((prev) => {
       if (!prev) setShowEmojiPicker(false)
       return !prev
@@ -274,7 +276,7 @@ export default function AllPosts() {
                 <EmojiPicker onEmojiClick={handleEmojiClick} />
               </div>
             )}
-            {showGifPicker && (
+            {showGifPicker && gifProvider && (
               <div className="gif-picker-wrapper absolute z-50 top-30 left-0 w-90 rounded-3xl bg-white shadow-2xl" ref={gifPickerRef}>
                 {gifProvider ? (
                   <GifPicker

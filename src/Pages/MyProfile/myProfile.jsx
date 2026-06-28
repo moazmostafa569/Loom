@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import {
   IconMapPin,
   IconLink,
@@ -9,14 +9,11 @@ import {
   IconCamera,
 } from "@tabler/icons-react";
 import "./../../styles/profile.css";
-import { getInitials } from "../../utils/PostCard";
-import { getProfile, getUserPosts, uploadProfilePicture } from "../../services/profileServices";
+import { getAvatarPhoto, getInitials } from "../../utils/PostCard";
+import { getProfile, getUserPosts, getUserProfile, uploadProfilePicture } from "../../services/profileServices";
 import PostCard from '../../components/PostCard/PostCard';
 import { getStoredUserId } from "../../utils/UserDetails";
 import { AuthContext } from "../../context/Authcontext";
-
-const DEFAULT_AVATAR_URL =
-  "https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png";
 
 const TABS = ["Posts", "Replies", "Media", "Likes"];
 
@@ -57,9 +54,95 @@ function formatJoinDate(dateString) {
 }
 
 function getProfilePhoto(apiUser) {
-  const photo = String(apiUser?.photo || apiUser?.avatar || apiUser?.image || "").trim();
-  const invalidPhoto = !photo || photo === DEFAULT_AVATAR_URL;
-  return invalidPhoto ? "" : photo;
+  return getAvatarPhoto(apiUser?.photo || apiUser?.avatar || apiUser?.image);
+}
+
+function getCount(value) {
+  if (Array.isArray(value)) return value.length;
+  if (value && typeof value === "object") {
+    if (Array.isArray(value.data)) return value.data.length;
+    if (Array.isArray(value.users)) return value.users.length;
+    if (Array.isArray(value.followers)) return value.followers.length;
+    return Number(value.count ?? value.total ?? value.length ?? 0) || 0;
+  }
+  return Number(value ?? 0) || 0;
+}
+
+function unwrapPeopleArray(value) {
+  if (Array.isArray(value)) return value;
+  if (!value || typeof value !== "object") return [];
+
+  const nested = [value.data, value.users, value.followers, value.items, value.results]
+    .find((item) => Array.isArray(item));
+  return nested || [];
+}
+
+function extractFollowers(profileResponse, apiUser) {
+  const candidates = [
+    apiUser?.followers,
+    apiUser?.followersList,
+    apiUser?.followerUsers,
+    apiUser?.followedBy,
+    profileResponse?.data?.followers,
+    profileResponse?.followers,
+    profileResponse?.data?.followerUsers,
+  ];
+
+  for (const candidate of candidates) {
+    const people = unwrapPeopleArray(candidate);
+    if (people.length) return people;
+  }
+
+  return [];
+}
+
+function getFollowerId(follower) {
+  if (typeof follower === "string") return follower;
+
+  const user = follower?.user || follower?.follower || follower?.followedBy || follower?.profile;
+  return (
+    user?._id ||
+    user?.id ||
+    follower?._id ||
+    follower?.id ||
+    follower?.userId ||
+    follower?.followerId ||
+    follower?.followedById ||
+    ""
+  );
+}
+
+function getInlineFollowerUser(follower) {
+  if (!follower || typeof follower === "string") return null;
+
+  const user = follower.user || follower.follower || follower.followedBy || follower.profile || follower;
+  const hasDisplayData = user?.name || user?.fullname || user?.username || user?.email || user?.photo || user?.avatar || user?.image;
+  return hasDisplayData ? user : null;
+}
+
+function unwrapProfileUser(response) {
+  return response?.data?.user ?? response?.user ?? response?.data ?? response ?? null;
+}
+
+function normalizeFollower(follower, index, fetchedUser = null) {
+  const user = fetchedUser || getInlineFollowerUser(follower);
+
+  if (!user || typeof user !== "object") return null;
+
+  const name = user.name || user.fullname || user.username || user.email?.split("@")[0];
+  if (!name) return null;
+
+  const handle = user.username || user.handle || user.email?.split("@")[0] || name.trim().split(/\s+/)[0]?.toLowerCase() || "user";
+  const avatarClasses = ["av-mint", "av-gold", "av-lav", "av-coral"];
+
+  return {
+    id: getFollowerId(follower) || user._id || user.id || user.email || user.username || `${name}-${index}`,
+    name,
+    handle,
+    initials: getInitials(name),
+    photo: getAvatarPhoto(user.photo || user.avatar || user.image),
+    colorClass: avatarClasses[index % avatarClasses.length],
+  };
 }
 
 function mapApiUser(apiUser) {
@@ -72,9 +155,9 @@ function mapApiUser(apiUser) {
     location: apiUser.location || "",
     website: apiUser.website || "",
     joined: formatJoinDate(apiUser.createdAt) || apiUser.joined || "",
-    posts: apiUser.postsCount ?? apiUser.posts ?? 0,
-    followers: apiUser.followersCount ?? apiUser.followers ?? 0,
-    following: apiUser.followingCount ?? apiUser.following ?? 0,
+    posts: apiUser.postsCount ?? getCount(apiUser.posts),
+    followers: apiUser.followersCount ?? getCount(apiUser.followers),
+    following: apiUser.followingCount ?? getCount(apiUser.following),
     photo: getProfilePhoto(apiUser),
   };
 }
@@ -234,6 +317,31 @@ export default function MyProfile() {
 
   const apiUser = profileResponse?.data?.user ?? profileResponse?.user ?? profileResponse?.data ?? null;
   const profileUser = mapApiUser(apiUser) ?? DEFAULT_USER;
+  const followerRefs = extractFollowers(profileResponse, apiUser);
+  const followerIdsToFetch = followerRefs
+    .filter((follower) => !getInlineFollowerUser(follower))
+    .map(getFollowerId)
+    .filter(Boolean)
+    .filter((id, index, ids) => ids.indexOf(id) === index);
+  const followerProfileQueries = useQueries({
+    queries: followerIdsToFetch.map((followerId) => ({
+      queryKey: ["profile-follower", followerId],
+      queryFn: () => getUserProfile(followerId),
+      enabled: Boolean(followerId),
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+  const followerProfilesById = new Map(
+    followerIdsToFetch.map((followerId, index) => [
+      followerId,
+      unwrapProfileUser(followerProfileQueries[index]?.data),
+    ])
+  );
+  const followersLoading = followerProfileQueries.some((query) => query.isLoading || query.isFetching);
+  const followersPreview = followerRefs
+    .map((follower, index) => normalizeFollower(follower, index, followerProfilesById.get(getFollowerId(follower))))
+    .filter(Boolean)
+    .slice(0, 3);
   const fetchError = profileError
     ? profileError.response?.data?.message || profileError.message || "Failed to load profile"
     : null;
@@ -431,18 +539,27 @@ export default function MyProfile() {
 
           <div className="panel">
             <h3>Followed by people you know</h3>
-            <div className="mutual">
-              <div className="avatar av-mint">RO</div>
-              <div className="info"><div className="name">Rohan Oduya</div><div className="handle">@rohan</div></div>
-            </div>
-            <div className="mutual">
-              <div className="avatar av-gold">TK</div>
-              <div className="info"><div className="name">Tariq Khan</div><div className="handle">@tariq.k</div></div>
-            </div>
-            <div className="mutual">
-              <div className="avatar av-lav">PV</div>
-              <div className="info"><div className="name">Priya Venkat</div><div className="handle">@priya_v</div></div>
-            </div>
+            {followersPreview.length ? (
+              followersPreview.map((follower) => (
+                <div className="mutual" key={follower.id}>
+                  <div className={`avatar ${follower.photo ? "avatar--image" : follower.colorClass}`}>
+                    {follower.photo ? (
+                      <img src={follower.photo} alt={`${follower.name} profile`} />
+                    ) : (
+                      follower.initials
+                    )}
+                  </div>
+                  <div className="info">
+                    <div className="name">{follower.name}</div>
+                    <div className="handle">@{follower.handle}</div>
+                  </div>
+                </div>
+              ))
+            ) : followersLoading ? (
+              <p className="profile-side-empty">Loading followers...</p>
+            ) : (
+              <p className="profile-side-empty">No followers yet.</p>
+            )}
           </div>
         </aside>
 

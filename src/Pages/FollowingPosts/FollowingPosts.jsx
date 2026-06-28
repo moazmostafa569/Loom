@@ -39,7 +39,7 @@ export default function FollowingPosts() {
     const [followState, setFollowState] = useState({})
     const inputPhoto = useRef(null)
     const gifPickerRef = useRef(null)
-    const giphyApiKey = import.meta.env.VITE_GIPHY_API_KEY || ''
+    const giphyApiKey = String(import.meta.env.VITE_GIPHY_API_KEY || '').trim()
     const gifProvider = useMemo(() => (giphyApiKey ? Giphy(giphyApiKey) : null), [giphyApiKey])
     let { email, myImage, myName } = useContext(AuthContext)
     const avatarSrc = getAvatarPhoto(myImage)
@@ -88,6 +88,8 @@ export default function FollowingPosts() {
     }
 
     const handleGifs = () => {
+        if (!gifProvider) return
+
         setShowGifPicker((prev) => {
             return !prev
         })
@@ -214,7 +216,7 @@ export default function FollowingPosts() {
                     </div>
                     <div className="input ">
                         <input onChange={(e) => setPostContent(e.target.value)} type="text" placeholder="What's pulling at your thread today?" value={postContent} />
-                        {showGifPicker && (
+                        {showGifPicker && gifProvider && (
                             <div className="gif-picker-wrapper absolute z-50 top-30 left-0 w-90 rounded-3xl bg-white shadow-2xl" ref={gifPickerRef}>
                                 {gifProvider ? (
                                     <GifPicker
