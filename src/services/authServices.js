@@ -1,19 +1,11 @@
-import axios from "axios";
+import apiClient from './apiClient';
 
 export async function registerUser(body) {
-    let {data} = await axios.post('https://route-posts.routemisr.com/users/signup', body, {
-        headers:{
-            'Content-Type': 'application/json'
-        }
-    })
+    const { data } = await apiClient.post('/users/signup', body);
     return data;
 }
 export async function loginUser(body) {
-    let {data} = await axios.post('https://route-posts.routemisr.com/users/signin', body, {
-        headers:{
-            'Content-Type': 'application/json'
-        }
-    })
+    const { data } = await apiClient.post('/users/signin', body);
     return data;
 }
 
@@ -26,16 +18,11 @@ export async function changePassword({ password, newPassword }) {
   const payload = { password, newPassword };
 
   try {
-    const { data } = await axios.patch(
-      'https://route-posts.routemisr.com/users/change-password',
-      payload,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const { data } = await apiClient.patch('/users/change-password', payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     console.log('[changePassword] response:', data);
     return data;
   } catch (error) {

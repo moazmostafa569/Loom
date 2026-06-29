@@ -13,7 +13,7 @@ import "./../../styles/settings.css";
 import { getProfile } from "../../services/profileServices";
 import { changePassword } from "../../services/authServices";
 import { settingsChangePasswordSchema } from "../../utils/authschema";
-import { zodResolver } from "../../utils/zodResolver";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { getInitials } from "../../utils/PostCard";
 import { applyTheme, getThemePreference, setThemePreference } from "../../utils/theme";
 

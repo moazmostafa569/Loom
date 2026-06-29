@@ -2,17 +2,19 @@ import { useContext, useState } from 'react'
 import './../../../styles/Login.css'
 import './../../../index.css'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '../../../utils/zodResolver'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { loginSchema } from '../../../utils/authschema'
 import { loginUser } from '../../../services/authServices'
 import { setStoredUserId } from '../../../utils/UserDetails'
 import { getAvatarPhoto } from '../../../utils/PostCard'
 import { toast } from 'react-toastify'
 import { useNavigate, Link } from 'react-router-dom'
+import { IconEye, IconEyeOff } from '@tabler/icons-react'
 import { AuthContext } from './../../../context/Authcontext';
 
 export default function Login() {
   const navigate = useNavigate()
+  const [showPassword, setShowPassword] = useState(false)
   const [apiError, setApiError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   let { setToken, setEmail, setUserId, setMyName, setMyImage } = useContext(AuthContext)
@@ -104,8 +106,12 @@ export default function Login() {
             <div className="field">
               <label htmlFor="pwd">Password</label>
               <div className="input-wrap">
-                <input id="pwd" type="password" placeholder="Enter your password" {...register('password')} />
-                <i className="ti ti-eye toggle-vis" />
+                <input id="pwd" type={showPassword ? 'text' : 'password'} placeholder="Enter your password" {...register('password')} />
+                {showPassword ? (
+                  <IconEyeOff size={18} className="toggle-vis cursor-pointer" onClick={() => setShowPassword(false)} />
+                ) : (
+                  <IconEye size={18} className="toggle-vis cursor-pointer" onClick={() => setShowPassword(true)} />
+                )}
               </div>
               {errors.password?.message && <p className="error-message text-sm text-red-500">{errors.password.message}</p>}
             </div>

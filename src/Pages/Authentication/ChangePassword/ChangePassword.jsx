@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { zodResolver } from '../../../utils/zodResolver'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { changePasswordSchema } from '../../../utils/authschema'
 import { changePassword } from '../../../services/authServices'
 import { toast } from 'react-toastify'

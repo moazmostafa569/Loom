@@ -2,8 +2,8 @@ import { useState } from 'react'
 import './../../../index.css'
 import { IconSparkles, IconEye, IconEyeOff, IconArrowRight } from '@tabler/icons-react'
 import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { registrationSchema } from '../../../utils/authschema';
-import { zodResolver } from '../../../utils/zodResolver';
 import { registerUser } from '../../../services/authServices';
 import { toast } from 'react-toastify';
 import { useNavigate, Link } from 'react-router-dom';
@@ -14,10 +14,6 @@ export default function Registeration() {
   const [showRePassword, setShowRePassword] = useState(false)
   const [apiError, setApiError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
-  const [currentStep, setCurrentStep] = useState(() => {
-    const s = parseInt(localStorage.getItem('registrationStep'), 10)
-    return isNaN(s) ? 1 : Math.min(3, Math.max(1, s))
-  })
 
   let { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     mode: 'onChange',
@@ -42,7 +38,7 @@ export default function Registeration() {
   async function submit(data) {
     setApiError('')
     setSuccessMessage('')
-    const { terms, rePassword, ...payload } = data
+    const { terms, ...payload } = data
     console.log('submit payload', payload)
 
     try {
@@ -51,15 +47,6 @@ export default function Registeration() {
 
       toast.success(message)
       setSuccessMessage(message)
-
-      const next = Math.min(3, currentStep + 1)
-      setCurrentStep(next)
-      try {
-        localStorage.setItem('registrationStep', String(next))
-      } catch {
-        /* ignore storage errors */
-      }
-
       navigate('/login')
       console.log(message)
     } catch (error) {
@@ -100,14 +87,6 @@ export default function Registeration() {
               <h1>Every story<br />has a <em>thread.</em></h1>
               <p>Loom connects what you post to the people who care about it — no noise, just the threads worth following.</p>
             </div>
-            <div className="steps">
-              <div className="seg"><div className={`node ${currentStep >= 1 ? 'active' : ''}`} /></div>
-              <div className="line" />
-              <div className="seg"><div className={`node ${currentStep >= 2 ? 'active' : ''}`} /></div>
-              <div className="line" />
-              <div className="seg"><div className={`node ${currentStep >= 3 ? 'active' : ''}`} /></div>
-              <div className="label">step {currentStep} of 3 — create account</div>
-            </div>
           </div>
         </div>
         <form className="form-side px-3 py-8 sm:px-6 lg:px-10 lg:py-12" onSubmit={handleSubmit(submit)}>
@@ -117,7 +96,7 @@ export default function Registeration() {
             <p className="sub">Create an account to post, follow people, and build your own corner of Loom.</p>
             <div className="field">
               <label htmlFor="lname">Full Name</label>
-              <input className="w-full bg-[#262232] p-3 rounded-2xl text-white" aria-invalid={!!errors.name} {...register('name')} id="fullname" type="text" placeholder="Mostafa" />
+              <input className="w-full bg-[#262232] p-3 rounded-2xl text-white" aria-invalid={!!errors.name} {...register('name')} id="fullname" type="text" placeholder="Moaz" />
               <p className="text-red-500 text-sm mt-1">{errors.name?.message}</p>
             </div>
             <div className="field">
