@@ -42,25 +42,34 @@ export default function Registeration() {
   async function submit(data) {
     setApiError('')
     setSuccessMessage('')
-    console.log('submit payload', data);
+    const { terms, rePassword, ...payload } = data
+    console.log('submit payload', payload)
+
     try {
-      let response = await registerUser(data)
-      const message = response.data?.message || response.message || 'Signup success'
-    
+      const response = await registerUser(payload)
+      const message = response?.message || response?.data?.message || 'Signup success'
+
       toast.success(message)
       setSuccessMessage(message)
-      navigate('/login')
-      console.log(message)
+
       const next = Math.min(3, currentStep + 1)
       setCurrentStep(next)
-      try { localStorage.setItem('registrationStep', String(next)) } catch { /* ignore storage errors */ }
+      try {
+        localStorage.setItem('registrationStep', String(next))
+      } catch {
+        /* ignore storage errors */
+      }
+
+      navigate('/login')
+      console.log(message)
     } catch (error) {
       const responseData = error.response?.data
       let errorMessage = responseData?.message || responseData?.errors || responseData || error.message
-      toast.error(errorMessage)
       if (typeof errorMessage !== 'string') {
         errorMessage = JSON.stringify(errorMessage)
       }
+
+      toast.error(errorMessage)
       setApiError(errorMessage)
       console.error('signup error', responseData || error)
     }
