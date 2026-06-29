@@ -117,15 +117,8 @@ export async function likePost(postId) {
         return data;
 }
 export async function unlikePost(postId) {
-        if (!postId) {
-            throw new Error('Missing postId for unlikePost');
-        }
-        let {data} = await axios.put(
-            `${API_BASE_URL}/posts/${postId}/unlike`,
-            {},
-            { headers: getAuthHeaders() }
-        )
-        return data;
+        // Route Posts API toggles like/unlike on the same /like endpoint
+        return likePost(postId);
 }
 export async function sharePost(postId) {
         if (!postId) {

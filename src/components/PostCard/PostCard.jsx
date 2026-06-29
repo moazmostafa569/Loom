@@ -5,7 +5,7 @@ import { getAllComments, getReplies } from '../../services/AllComents';
 import Comments from '../Comments/Comments';
 import './../../styles/PostCard.css'
 import { useNavigate } from 'react-router-dom';
-import { savePost, updatePost, deletePost, likePost, unlikePost, sharePost, unSharePost, getPostLikes } from '../../services/AllPostsServices';
+import { savePost, updatePost, deletePost, likePost, sharePost, unSharePost, getPostLikes } from '../../services/AllPostsServices';
 
 const DEFAULT_AVATAR_URL = 'https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png';
 
@@ -267,12 +267,11 @@ export default function PostCard({ post, onDelete }) {
     }
 
     try {
+      await likePost(postId);
       if (isLiked) {
-        await unlikePost(postId);
         setIsLiked(false);
         setLocalLikesCount((count) => Math.max(0, count - 1));
       } else {
-        await likePost(postId);
         setIsLiked(true);
         setLocalLikesCount((count) => count + 1);
       }
@@ -413,13 +412,6 @@ export default function PostCard({ post, onDelete }) {
         )}
         <div className="post-meta">
           <span className="post-meta-user">
-            <span className={`avatar-xs ${showImage ? 'avatar-img' : 'av-coral'}`}>
-              {showImage ? (
-                <img src={photo} alt={user?.name || 'User avatar'} />
-              ) : (
-                initials
-              )}
-            </span>
             <span className="name">{user?.name || user?.fullname || 'Unknown User'}</span>
           </span>
           <span className="handle">{handleText}</span>
