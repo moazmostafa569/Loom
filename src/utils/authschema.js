@@ -3,8 +3,8 @@ import * as z from 'zod';
 export const registrationSchema = z.object({
   name: z.string().min(2, 'Full name must be at least 2 characters').max(40, 'Full Name must be less than 40 characters'),
   username: z.string()
-    .min(3, 'Please choose a username that follows Loom\'s Terms of Service.')
-    .regex(/^[a-zA-Z0-9_]+$/, 'Please choose a username that follows Loom\'s Terms of Service.'),
+    .min(3, 'Username must be at least 3 characters and may include lowercase letters, numbers, underscores, and dots.')
+    .regex(/^[a-z0-9_.]+$/, 'Username may include lowercase letters, numbers, underscores, and dots only.'),
   email: z.string().email('Enter a valid email'),
   password: z.string()
     .min(8, 'Password must be at least 8 characters')
