@@ -129,6 +129,7 @@ export default function SavedPosts() {
       return items.map((p) => {
         const sourcePost = p?.repost || p?.sharedPost || p?.original || p;
         const user = sourcePost.user || sourcePost.author || p.user || p.author || {};
+        const userId = user._id || user.id || sourcePost.userId || sourcePost.authorId || p.userId || p.authorId || "";
         const name = user.name || user.fullname || p.name || sourcePost.name || "Unknown";
         const username = user.username || sourcePost.username || p.handle || sourcePost.handle || (name || "").toLowerCase().replace(/\s+/g, "_");
         const photo = (user.photo || user.avatar || user.image || sourcePost.photo || sourcePost.avatar || sourcePost.image || "").trim();
@@ -137,11 +138,14 @@ export default function SavedPosts() {
           id: p._id || p.id,
           section: p.section || "Saved",
           user: {
+            _id: userId,
+            id: userId,
             name,
             username,
             photo,
             color,
           },
+          userId,
           name,
           handle: username,
           initials: getInitials(name),
