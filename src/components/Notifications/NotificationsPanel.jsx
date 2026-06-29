@@ -173,24 +173,25 @@ function NotifItem({ notif, onRead, following, onFollow, onNavigate, onClose }) 
     const initials = sender.initials;
     const color = sender.color;
     const postId = extractPostId(notif);
-    const senderId = sender.actor._id;
-    const isPostNavigable = POST_LINK_TYPES.has(normalizedType) && Boolean(postId);
+    const senderId = sender.id || extractSenderId(notif);
+    const targetPostId = notif?.entityId || notif?.entity?.Id || notif?.entity?._id || notif?.entity?.id || notif?.post?._id || notif?.post?.id || postId;
+    const currentUserId = localStorage.getItem("user-id");
+    const isSelfSender = Boolean(currentUserId && senderId && String(senderId) === String(currentUserId));
+    const isPostNavigable = POST_LINK_TYPES.has(normalizedType) && Boolean(targetPostId);
     const isFollowNavigable = normalizedType === "follow" && Boolean(senderId);
     const isNavigable = isPostNavigable || isFollowNavigable;
 
     function handleClick() {
-         const navigate = useNavigate()
-
         if (!notif.isRead) onRead(notif._id);
 
         if (isFollowNavigable) {
-            navigate(`/user_profile/${senderId}`);
+            onNavigate?.(isSelfSender ? "/my_profile" : `/user_profile/${senderId}`);
             onClose?.();
             return;
         }
 
         if (isPostNavigable) {
-            navigate(`/posts/${ notif?.entityId}`);
+            onNavigate?.(isSelfSender ? "/my_profile" : `/posts/${targetPostId}`);
             onClose?.();
         }
     }
@@ -399,7 +400,7 @@ export default function NotificationsPanel({ token, unreadCount, onUnreadCountCh
                         </div>
                     ) : (
                         Object.entries(grouped).map(([date, items]) => (
-                            <div onClick={()=> getPost(postId)} key={date}>
+                            <div  key={date}>
                                 <div   className="notif-date-label">{date}</div>
                                 {items.map((n) => (
                                     <NotifItem

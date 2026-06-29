@@ -5,7 +5,7 @@ import { getAllComments, getReplies } from '../../services/AllComents';
 import Comments from '../Comments/Comments';
 import './../../styles/PostCard.css'
 import { useNavigate } from 'react-router-dom';
-import { savePost, updatePost, deletePost, likePost, sharePost, unSharePost, getPostLikes } from '../../services/AllPostsServices';
+import { savePost, updatePost, deletePost, likePost, sharePost, unSharePost, getPostLikes, getAllPosts } from '../../services/AllPostsServices';
 
 const DEFAULT_AVATAR_URL = 'https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png';
 
@@ -116,7 +116,7 @@ export default function PostCard({ post, onDelete }) {
   const originalPostText = sourcePost?.body || sourcePost?.text || sourcePost?.caption || sourcePost?.content || sourcePost?.description || sourcePost?.message || '';
   const [currentBody, setCurrentBody] = useState(originalPostText);
   const postText = currentBody;
-  const gifUrlMatch = postText.match(/https?:\/\/\S+?\.gif(?:\?\S*)?/i);
+  const gifUrlMatch = postText.match(/https?:\/\/[^\s"'<>]+(?:\.gif|\/gif)(?:\?[^\s"'<>]*)?/i);
   const postGifUrl = gifUrlMatch ? gifUrlMatch[0].trim() : '';
   const postTextWithoutGif = postGifUrl ? postText.replace(postGifUrl, '').trim() : postText;
   const postImage = (sourcePost?.image || sourcePost?.imageUrl || sourcePost?.photo || sourcePost?.mediaUrl || '').trim();
@@ -136,6 +136,44 @@ export default function PostCard({ post, onDelete }) {
   const openImage = (src) => setOpenImageSrc(src || '');
   const closeImage = () => setOpenImageSrc('');
   const navigate = useNavigate();
+
+  function isGifUrl(value) {
+    return /https?:\/\/[^\s"'<>]+(?:\.gif|\/gif)(?:\?[^\s"'<>]*)?/i.test(String(value || ''));
+  }
+
+  async function findSharePostIdForPost(targetPostId) {
+    if (!targetPostId) return '';
+
+    try {
+      const response = await getAllPosts();
+      const postsList = Array.isArray(response?.data?.posts)
+        ? response.data.posts
+        : Array.isArray(response?.posts)
+          ? response.posts
+          : Array.isArray(response?.data)
+            ? response.data
+            : Array.isArray(response)
+              ? response
+              : [];
+
+      const currentUserId = localStorage.getItem('user-id');
+      const matchingPost = postsList.find((item) => {
+        const itemId = item?._id || item?.id;
+        if (!itemId || String(itemId) === String(targetPostId)) return false;
+
+        const ownerId = item?.user?._id || item?.user?.id || item?.creator?._id || item?.creator?.id || item?.createdBy?._id || item?.createdBy?.id || '';
+        const originalPostId = item?.repost?._id || item?.repost?.id || item?.sharedPost?._id || item?.sharedPost?.id || item?.original?._id || item?.original?.id || item?.entity?.postId || item?.entity?.post?._id || item?.entity?.post?.id || '';
+
+        return String(ownerId) === String(currentUserId) && String(originalPostId) === String(targetPostId);
+      });
+
+      return matchingPost?._id || matchingPost?.id || '';
+    } catch (error) {
+      console.error('Failed to find share post id:', error);
+      return '';
+    }
+  }
+
   const openPostInNewTab = () => {
     const url = window.location.origin + `/posts/${postId || ''}`;
     window.open(url, '_blank');
@@ -309,11 +347,20 @@ export default function PostCard({ post, onDelete }) {
 
     const sharedPosts = parseStoredSharedPosts();
     const currentSharePostId = sharePostId || sharedPosts[postId] || '';
-    const canUnshare = Boolean(isShared && currentSharePostId);
+    const apiShareState = typeof post?.isShared === 'boolean'
+      ? post.isShared
+      : typeof post?.isReposted === 'boolean'
+        ? post.isReposted
+        : false;
+    const canUnshare = Boolean(isShared && (currentSharePostId || apiShareState));
 
     try {
       if (canUnshare) {
-        await unSharePost(currentSharePostId);
+        const resolvedSharePostId = currentSharePostId || await findSharePostIdForPost(postId);
+        if (resolvedSharePostId) {
+          await unSharePost(resolvedSharePostId);
+        }
+
         const nextSharedPosts = { ...sharedPosts };
         delete nextSharedPosts[postId];
         saveStoredSharedPosts(nextSharedPosts);
@@ -493,6 +540,7 @@ export default function PostCard({ post, onDelete }) {
               className="clickable-image"
               src={postGifUrl}
               loading="eager"
+              decoding="async"
               onClick={() => openImage(postGifUrl)}
               alt={post.user?.name ? `${post.user.name} gif post` : 'Post GIF'}
             />
@@ -535,11 +583,11 @@ export default function PostCard({ post, onDelete }) {
           </div>
           <div onClick={() => fetchAllComments(postId)} className="act cursor-pointer"><IconMessageCircle stroke={2} /> {totalCommentsAndReplies}</div>
           <div
-            className={`act ${isShared && !sharePostId ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+            className="act cursor-pointer"
             onClick={handleShareToggle}
-            aria-disabled={isShared && !sharePostId}
+            aria-disabled={false}
           >
-            {isShared && sharePostId ? <IconRepeatOff stroke={2} /> : <IconRepeat stroke={2} />}
+            {isShared ? <IconRepeatOff stroke={2} /> : <IconRepeat stroke={2} />}
           </div>
           <div onClick={handleSavePost} className="act cursor-pointer"><IconBookmark stroke={2} className={isSaved ? 'saved' : ''} /></div>
         </div>

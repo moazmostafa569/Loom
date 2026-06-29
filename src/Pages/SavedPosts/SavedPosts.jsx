@@ -44,6 +44,7 @@ function GridCard({ post, onUnsave }) {
   const sourcePost = isSharedPost ? (repostedContent || post) : post;
   const originalPostUser = sourcePost?.user || sourcePost?.creator || sourcePost?.author || sourcePost?.createdBy || sourcePost?.postedBy || {};
   const originalAuthor = originalPostUser || post?.user || post?.creator || post?.author || post?.createdBy || post?.postedBy || {};
+  const sharerUser = post?.user || post?.creator || post?.author || post?.createdBy || post?.postedBy || {};
   const avatarUser = isSharedPost ? sharerUser : originalAuthor;
   const photo = (avatarUser.photo || avatarUser.avatar || avatarUser.image || '').trim();
   const showImage = photo && photo !== DEFAULT_AVATAR_URL;
@@ -126,11 +127,12 @@ export default function SavedPosts() {
       else items = [];
 
       return items.map((p) => {
-        const user = p.user || p.author || {};
-        const name = user.name || user.fullname || p.name || "Unknown";
-        const username = user.username || p.handle || (name || "").toLowerCase().replace(/\s+/g, "_");
-        const photo = (user.photo || user.avatar || user.image || "").trim();
-        const color = p.color || user.color || "lav";
+        const sourcePost = p?.repost || p?.sharedPost || p?.original || p;
+        const user = sourcePost.user || sourcePost.author || p.user || p.author || {};
+        const name = user.name || user.fullname || p.name || sourcePost.name || "Unknown";
+        const username = user.username || sourcePost.username || p.handle || sourcePost.handle || (name || "").toLowerCase().replace(/\s+/g, "_");
+        const photo = (user.photo || user.avatar || user.image || sourcePost.photo || sourcePost.avatar || sourcePost.image || "").trim();
+        const color = p.color || user.color || sourcePost.color || "lav";
         return {
           id: p._id || p.id,
           section: p.section || "Saved",
@@ -144,15 +146,15 @@ export default function SavedPosts() {
           handle: username,
           initials: getInitials(name),
           color,
-          time: p.time || p.createdAt || "",
-          text: p.body || p.text || p.content || "",
-          tag: p.tag || "",
-          image: p.image || "",
-          media: !!(p.image || p.media || p.hasMedia),
-          likes: p.likesCount,
-          comments: p.comments || p.commentsCount || 0,
-          reposts: p.reposts || p.repostsCount || 0,
-          liked: !!p.liked,
+          time: p.time || p.createdAt || sourcePost.createdAt || "",
+          text: sourcePost.body || sourcePost.text || sourcePost.content || p.body || p.text || p.content || "",
+          tag: p.tag || sourcePost.tag || "",
+          image: sourcePost.image || sourcePost.imageUrl || sourcePost.photo || sourcePost.mediaUrl || p.image || "",
+          media: !!(sourcePost.image || sourcePost.imageUrl || sourcePost.photo || sourcePost.mediaUrl || p.image || p.media || p.hasMedia),
+          likes: p.likesCount || sourcePost.likesCount || 0,
+          comments: p.comments || p.commentsCount || sourcePost.commentsCount || 0,
+          reposts: p.reposts || p.repostsCount || sourcePost.repostsCount || 0,
+          liked: !!(p.liked || sourcePost.liked),
           collection: p.collection || p.bookmark?.collection || "all",
         };
       });

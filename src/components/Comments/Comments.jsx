@@ -1099,8 +1099,8 @@ export default function Comments({
         className={`bottom-sheet ${visible ? 'open' : ''}`}
         style={{ height: sheetHeight ? `${sheetHeight}px` : undefined }}
       >
-        <div className="sheet-handle">
-          <div className="sheet-handle-bar" onPointerDown={onHandlePointerDown} />
+        <div className="sheet-handle" onPointerDown={onHandlePointerDown}>
+          <div className="sheet-handle-bar" />
         </div>
         <div className="sheet-content">
           {commentsBody}

@@ -528,8 +528,10 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  overscroll-behavior: contain;
+  overscroll-behavior-y: contain;
+  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
   padding-bottom: 28px;
   scrollbar-gutter: stable;
 }
