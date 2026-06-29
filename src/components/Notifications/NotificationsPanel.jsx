@@ -17,6 +17,7 @@ import {
     markOneRead,
     markAllRead,
 } from "../../services/notificationsServices";
+import { getAvatarPhoto } from "../../utils/PostCard";
 import "../../styles/notifications.css";
 
 const TYPE_CONFIG = {
@@ -42,24 +43,58 @@ function parseNotificationsList(res) {
 }
 
 const POST_LINK_TYPES = new Set(["like", "comment", "reply", "mention", "share"]);
-
 function extractPostId(notif) {
     return (
-        notif?.post?._id ??
-        notif?.post?.id ??
-        notif?.postId ??
-        notif?.post_id ??
-        (typeof notif?.post === "string" ? notif.post : null)
+        notif?.entity.Id ??
+        (typeof notif?._id === "string" ? notif._id : null)
     );
 }
 
 function extractSenderId(notif) {
     return (
-        notif?.sender?._id ??
-        notif?.sender?.id ??
+        notif?.actor?._id ??
+        (typeof notif?.sender === "string" ? notif.sender : null) ??
         notif?.senderId ??
         notif?.sender_id
     );
+}
+
+
+function getInitials(name, fallback = "??") {
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return fallback;
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return parts.slice(0, 2).map((part) => part[0].toUpperCase()).join("");
+}
+
+function getSenderDetails(notif) {
+    const sender = notif?.actor;
+    const fallback = {
+        id: extractSenderId(notif),
+        name: notif.actor.name,
+        initials: notif.actor.name,
+        color: "coral",
+        photo: notif.actor.photo ,
+    };
+
+    if (!sender || typeof sender !== "object") return fallback;
+
+    const name = sender.name|| "Someone";
+    const hasRealName = name !== "Someone";
+
+    return {
+        id: sender._id ,
+        name,
+        initials: sender.initials || getInitials(hasRealName ? name : "", "??"),
+        color: sender.color || "coral",
+        photo: getAvatarPhoto(sender.photo ),
+    };
+}
+
+function getPostPreview(post) {
+    if (!post || typeof post !== "object") return "";
+    const text = post.entity.body || post.body || post.text || post.caption || "";
+    return text ? text.slice(0, 48) : "";
 }
 
 const TYPE_ALIASES = {
@@ -133,25 +168,29 @@ function NotifItem({ notif, onRead, following, onFollow, onNavigate, onClose }) 
     const cfg = getTypeConfig(notif.type);
     const normalizedType = normalizeNotificationType(notif.type);
     const Icon = cfg.icon;
-    const initials = notif.sender?.initials ?? notif.sender?.name?.slice(0, 2).toUpperCase() ?? "??";
-    const color = notif.sender?.color ?? "coral";
+    const sender = getSenderDetails(notif);
+    const postPreview = getPostPreview(notif.post);
+    const initials = sender.initials;
+    const color = sender.color;
     const postId = extractPostId(notif);
-    const senderId = extractSenderId(notif);
+    const senderId = sender.actor._id;
     const isPostNavigable = POST_LINK_TYPES.has(normalizedType) && Boolean(postId);
     const isFollowNavigable = normalizedType === "follow" && Boolean(senderId);
     const isNavigable = isPostNavigable || isFollowNavigable;
 
     function handleClick() {
+         const navigate = useNavigate()
+
         if (!notif.isRead) onRead(notif._id);
 
         if (isFollowNavigable) {
-            onNavigate?.(`/user_profile/${senderId}`);
+            navigate(`/user_profile/${senderId}`);
             onClose?.();
             return;
         }
 
         if (isPostNavigable) {
-            onNavigate?.(`/posts/${postId}`);
+            navigate(`/posts/${ notif?.entityId}`);
             onClose?.();
         }
     }
@@ -160,19 +199,27 @@ function NotifItem({ notif, onRead, following, onFollow, onNavigate, onClose }) 
         <div
             className={`notif-item${notif.isRead ? "" : " unread"}${isNavigable ? " notif-item--link" : ""}`}
             onClick={handleClick}
+            
         >
             <div className="notif-avatars">
-                <div className={`notif-av av-${color}`}>{initials}</div>
+                <div className={`notif-av av-${color}`}>
+                    {sender.photo ? (
+                        <img src={sender.photo} alt={sender.name} />
+                    ) : (
+                        initials
+                    )}
+                </div>
                 <div className={`notif-type-icon ${cfg.cls}`}>
                     <Icon size={11} stroke={2} />
                 </div>
             </div>
             <div className="notif-content">
                 <p className="notif-text">
-                    <span className="sender">{notif.sender?.name}</span>{" "}
-                    <span>{cfg.label}</span>
-                    {notif.post && (
-                        <span className="post-preview"> — "{notif.post.content?.slice(0, 48)}…"</span>
+                    <span className="sender">{sender.name}</span>{" "}
+                    <span>{notif.type}</span>
+                    {postPreview && <span className="post-preview"> - "{postPreview}..."</span>}
+                    {false && postPreview && (
+                        <span className="post-preview"> — "{notif.entity.body?.slice(0, 48)}…"</span>
                     )}
                 </p>
                 {notif.comment && (
@@ -260,6 +307,8 @@ export default function NotificationsPanel({ token, unreadCount, onUnreadCountCh
             markOneRead(token, id).catch(() => { /* ignore */ });
         }
     }
+
+
 
     async function handleMarkAll() {
         if (marking) return;
@@ -350,8 +399,8 @@ export default function NotificationsPanel({ token, unreadCount, onUnreadCountCh
                         </div>
                     ) : (
                         Object.entries(grouped).map(([date, items]) => (
-                            <div key={date}>
-                                <div className="notif-date-label">{date}</div>
+                            <div onClick={()=> getPost(postId)} key={date}>
+                                <div   className="notif-date-label">{date}</div>
                                 {items.map((n) => (
                                     <NotifItem
                                         key={n._id}
@@ -363,6 +412,7 @@ export default function NotificationsPanel({ token, unreadCount, onUnreadCountCh
                                         onClose={onClose}
                                     />
                                 ))}
+                                
                             </div>
                         ))
                     )}

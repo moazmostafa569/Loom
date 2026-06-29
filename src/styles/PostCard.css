@@ -113,8 +113,87 @@
     height: 13px;
 }
 
+.repost-banner-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.repost-banner-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.55rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.repost-banner-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.repost-banner-text {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.repost-banner-name {
+    color: var(--text);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.repost-banner-handle,
+.repost-banner-separator,
+.repost-banner-label {
+    color: var(--text-faint);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.72rem;
+}
+
+.repost-banner-separator {
+    margin: 0 0.1rem;
+}
+
+/* Inline avatar beside header name */
+.post-meta-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.post-meta-user .avatar-xs {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.post-meta-user .avatar-xs img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
 svg.saved,
 .act .liked {
     fill: currentColor;
     color: var(--coral);
 }
+

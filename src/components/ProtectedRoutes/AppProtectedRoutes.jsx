@@ -1,18 +1,31 @@
-import React, { Children, useEffect } from 'react'
-import { useContext } from 'react'
-import { useNavigate } from 'react-router-dom'
+import React, { useContext, useEffect, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import { AuthContext } from '../../context/Authcontext'
 
 export default function AppProtectedRoutes({children}) {
+    const { token } = useContext(AuthContext)
+    const [authChecked, setAuthChecked] = useState(false)
+    const [storedToken, setStoredToken] = useState(null)
 
-    const navigate = useNavigate()
-     
-    // const userToken = localStorage.getItem('user-token')
-    let {token} = useContext(AuthContext)
-    useEffect(()=>{
-        if(!token){
-            navigate('/login')
-        }
-    },[token])
-  return children
+    useEffect(() => {
+        const confirmedToken = localStorage.getItem('user-token') || null
+        setStoredToken(confirmedToken)
+        setAuthChecked(true)
+    }, [token])
+
+    if (!authChecked) {
+        return (
+            <div className="auth-route-loading" role="status" aria-label="Checking authentication">
+                <div className="auth-route-spinner" />
+            </div>
+        )
+    }
+
+    const activeToken = localStorage.getItem('user-token') || storedToken
+
+    if (!activeToken) {
+        return <Navigate to="/login" replace />
+    }
+
+    return children
 }

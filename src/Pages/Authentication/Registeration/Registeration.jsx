@@ -90,7 +90,7 @@ export default function Registeration() {
               <h1>Every story<br />has a <em>thread.</em></h1>
               <p>Loom connects what you post to the people who care about it — no noise, just the threads worth following.</p>
             </div>
-            <div className="steps flex justify-start mt-11">
+            <div className="steps">
               <div className="seg"><div className={`node ${currentStep >= 1 ? 'active' : ''}`} /></div>
               <div className="line" />
               <div className="seg"><div className={`node ${currentStep >= 2 ? 'active' : ''}`} /></div>
@@ -100,7 +100,7 @@ export default function Registeration() {
             </div>
           </div>
         </div>
-        <form className="form-side px-6 py-8 lg:px-10 lg:py-12" onSubmit={handleSubmit(submit)}>
+        <form className="form-side px-3 py-8 sm:px-6 lg:px-10 lg:py-12" onSubmit={handleSubmit(submit)}>
           <div className="card">
             <div className="tag"><IconSparkles size={16} stroke={1.5} /> free to join</div>
             <h2 className='text-white'>Start your thread</h2>

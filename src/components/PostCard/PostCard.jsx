@@ -5,7 +5,7 @@ import { getAllComments, getReplies } from '../../services/AllComents';
 import Comments from '../Comments/Comments';
 import './../../styles/PostCard.css'
 import { useNavigate } from 'react-router-dom';
-import { savePost, updatePost, deletePost, likePost, unlikePost, sharePost, unSharePost } from '../../services/AllPostsServices';
+import { savePost, updatePost, deletePost, likePost, unlikePost, sharePost, unSharePost, getPostLikes } from '../../services/AllPostsServices';
 
 const DEFAULT_AVATAR_URL = 'https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png';
 
@@ -26,7 +26,7 @@ export default function PostCard({ post, onDelete }) {
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false)
   const [isSaved, setIsSaved] = useState(false);
-  const [isLiked, setIsLiked] = useState(false);
+  const [isLiked, setIsLiked] = useState(() => Boolean(post?.isLiked));
   const [isShared, setIsShared] = useState(false);
   const [sharePostId, setSharePostId] = useState('');
   const [localLikesCount, setLocalLikesCount] = useState(null);
@@ -87,15 +87,29 @@ export default function PostCard({ post, onDelete }) {
   const repostedContent = post?.repost || post?.sharedPost || post?.original || null;
   const isSharedPost = Boolean(post?.isShared || post?.isReposted || post?.isRepost || post?.isShare || post?.sharedBy || post?.repostedBy || repostedContent);
   const sourcePost = isSharedPost ? (repostedContent || post) : post;
-
   const originalPostUser = sourcePost?.user || sourcePost?.creator || sourcePost?.author || sourcePost?.createdBy || sourcePost?.postedBy || {};
   const originalAuthor = originalPostUser || post?.user || post?.creator || post?.author || post?.createdBy || post?.postedBy || {};
-  const sharerUser = post?.user || post?.creator || post?.author || post?.createdBy || post?.postedBy || {};
+  const reposterUser = post?.user || post?.creator || post?.author || post?.createdBy || post?.postedBy || {};
   const user = originalAuthor;
-  const avatarUser = isSharedPost ? sharerUser : originalAuthor;
-  const photo = (avatarUser.photo || avatarUser.avatar || avatarUser.image || '').trim();
-  const showImage = photo && photo !== DEFAULT_AVATAR_URL;
-  const initials = getInitials(avatarUser.name || avatarUser.fullname || avatarUser.username || 'User');
+
+  function getUserAvatarInfo(userObj) {
+    const userPhoto = (userObj?.photo || userObj?.avatar || userObj?.image || '').trim();
+    const userShowImage = userPhoto && userPhoto !== DEFAULT_AVATAR_URL;
+    const userInitials = getInitials(userObj?.name || userObj?.fullname || userObj?.username || 'User');
+    return { photo: userPhoto, showImage: userShowImage, initials: userInitials };
+  }
+
+  const { photo, showImage, initials } = getUserAvatarInfo(originalAuthor);
+  const reposterAvatar = getUserAvatarInfo(reposterUser);
+  const reposterName = reposterUser?.name || reposterUser?.fullname || localStorage.getItem('user-name') || 'User';
+  const reposterHandle = reposterUser?.username
+    ? `@${reposterUser.username}`
+    : reposterUser?.handle
+      ? (reposterUser.handle.startsWith('@') ? reposterUser.handle : `@${reposterUser.handle}`)
+      : (() => {
+          const stored = localStorage.getItem('user-username') || localStorage.getItem('user-handle') || '';
+          return stored ? (stored.startsWith('@') ? stored : `@${stored}`) : '';
+        })();
   const handleText = user.username ? `@${user.username}` : user.handle ? `@${user.handle}` : user.name ? `@${user.name.trim().split(/\s+/)[0].toLowerCase()}` : '@user';
   const createdAt = sourcePost?.createdAt || sourcePost?.created_at || sourcePost?.created || sourcePost?.timestamp || sourcePost?.date || sourcePost?.createdOn || sourcePost?.postedAt || post?.createdAt || post?.created_at || post?.created || post?.timestamp || post?.date || post?.createdOn || post?.postedAt || '';
   const timeText = formatPostTime(createdAt);
@@ -111,16 +125,10 @@ export default function PostCard({ post, onDelete }) {
   const initialLikesCount = Number(post?.likesCount ?? post?.likes ?? post?.likes_count ?? (Array.isArray(post?.likes) ? post.likes.length : undefined) ?? 0) || 0;
   const initialSharesCount = Number(post?.sharesCount ?? post?.shares_count ?? post?.shares ?? 0) || 0;
   const commentsCount = Number(post?.commentsCount ?? post?.comments ?? post?.comments_count ?? (Array.isArray(post?.comments) ? post.comments.length : undefined) ?? 0) || 0;
-  const repostedByUser = (() => {
-    const source = post?.repostedBy || post?.sharedBy || post?.repost?.user || post?.repost?.author;
-    if (typeof source === 'string') return source;
-    return source?.username || source?.handle || source?.userName || source?.name || '';
-  })();
-  const showRepostNotice = Boolean(post?.isReposted || post?.isShared || post?.isRepost || post?.isShare || repostedByUser);
-  const normalizedRepostHandle = repostedByUser?.trim() || '';
-  const repostText = normalizedRepostHandle
-    ? `${normalizedRepostHandle.startsWith('@') ? normalizedRepostHandle : `@${normalizedRepostHandle}`} reposted`
-    : 'Reposted';
+  const showRepostNotice = isSharedPost;
+  const repostText = reposterHandle
+    ? `${reposterName} ${reposterHandle} reposted`
+    : `${reposterName} reposted`;
   const sharesCount = localSharesCount !== null ? localSharesCount : initialSharesCount;
   const likesCount = localLikesCount !== null ? localLikesCount : initialLikesCount;
   const totalRepliesCount = comments.reduce((sum, comment) => sum + (Array.isArray(comment?.replies) ? comment.replies.length : 0), 0);
@@ -156,7 +164,12 @@ export default function PostCard({ post, onDelete }) {
     const isPostSaved = savedPosts.includes(postId);
     setIsSaved(isPostSaved);
 
-    const likedFromArray = Array.isArray(post?.likes) && currentUserId ? post.likes.includes(currentUserId) : false;
+    const likedFromArray = Array.isArray(post?.likes) && currentUserId
+      ? post.likes.some((liker) => {
+          const id = typeof liker === 'string' ? liker : (liker?._id || liker?.id || liker?.userId || liker?.user?._id || liker?.user?.id);
+          return String(id) === String(currentUserId);
+        })
+      : false;
     const likedState = typeof post?.isLiked === 'boolean' ? post.isLiked : likedFromArray;
     setIsLiked(Boolean(likedState));
 
@@ -190,7 +203,30 @@ export default function PostCard({ post, onDelete }) {
     setLocalSharesCount(initialSharesCount);
     setEditBody(originalPostText);
     setCurrentBody(originalPostText);
-  }, [postId, currentUserId, originalPostText, initialLikesCount, initialSharesCount]);
+  }, [postId, post?.isLiked, currentUserId, originalPostText, initialLikesCount, initialSharesCount]);
+
+  useEffect(() => {
+    async function verifyLikeState() {
+      if (!postId || !currentUserId) return;
+      try {
+        const likesResponse = await getPostLikes(postId);
+        const payload = likesResponse?.likes ?? likesResponse?.data?.likes ?? likesResponse?.data ?? likesResponse ?? [];
+        const likesArray = Array.isArray(payload) ? payload : [];
+
+        const likedByMe = likesArray.some((liker) => {
+          const id = typeof liker === 'string' ? liker : (liker?._id || liker?.id || liker?.userId || liker?.user?._id || liker?.user?.id);
+          return String(id) === String(currentUserId);
+        });
+
+        const likedFromPost = typeof post?.isLiked === 'boolean' ? post.isLiked : false;
+        setIsLiked(Boolean(likedFromPost || likedByMe));
+      } catch (e) {
+        console.error('Failed to verify like state:', e);
+      }
+    }
+
+    verifyLikeState();
+  }, [postId, currentUserId, post?.isLiked]);
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -225,7 +261,10 @@ export default function PostCard({ post, onDelete }) {
   }
 
   async function toggleLike() {
-    if (!postId) return;
+    if (!postId) {
+      console.error('Cannot toggle like: postId is missing');
+      return;
+    }
 
     try {
       if (isLiked) {
@@ -349,14 +388,40 @@ export default function PostCard({ post, onDelete }) {
       <div className="post-body">
         {showRepostNotice && (
           <div className="post-repost-banner" role="status" aria-label={repostText}>
-            <span className="post-repost-icon">
+            <span className="post-repost-icon" aria-hidden="true">
               <IconRepeat size={13} stroke={2} />
             </span>
-            <span>{repostText}</span>
+            <span className="repost-banner-user" role="presentation">
+              <span
+                className={`repost-banner-avatar ${reposterAvatar.showImage ? 'avatar-img' : 'av-coral'}`}
+                onClick={() => openUserProfile(reposterUser?._id || reposterUser?.id || currentUserId)}
+              >
+                {reposterAvatar.showImage ? (
+                  <img src={reposterAvatar.photo} alt={reposterName} />
+                ) : (
+                  reposterAvatar.initials
+                )}
+              </span>
+              <span className="repost-banner-text">
+                <span className="repost-banner-name">{reposterName}</span>
+                {reposterHandle && <span className="repost-banner-handle">{reposterHandle}</span>}
+              </span>
+            </span>
+            <span className="repost-banner-separator" aria-hidden="true">·</span>
+            <span className="repost-banner-label">Reposted</span>
           </div>
         )}
         <div className="post-meta">
-          <span className="name">{user?.name || user?.fullname || 'Unknown User'}</span>
+          <span className="post-meta-user">
+            <span className={`avatar-xs ${showImage ? 'avatar-img' : 'av-coral'}`}>
+              {showImage ? (
+                <img src={photo} alt={user?.name || 'User avatar'} />
+              ) : (
+                initials
+              )}
+            </span>
+            <span className="name">{user?.name || user?.fullname || 'Unknown User'}</span>
+          </span>
           <span className="handle">{handleText}</span>
           <span className="time">{timeText}</span>
           <span className="meta-menu-icon" ref={dropdownRef}>
@@ -435,6 +500,7 @@ export default function PostCard({ post, onDelete }) {
             <img
               className="clickable-image"
               src={postGifUrl}
+              loading="eager"
               onClick={() => openImage(postGifUrl)}
               alt={post.user?.name ? `${post.user.name} gif post` : 'Post GIF'}
             />
@@ -450,13 +516,30 @@ export default function PostCard({ post, onDelete }) {
               >
                 <IconX className="cursor-pointer" stroke={2} />
               </button>
-              <img src={openImageSrc} alt="Expanded preview" />
+              <img
+                src={openImageSrc}
+                loading={String(openImageSrc).toLowerCase().includes('.gif') ? 'eager' : undefined}
+                alt="Expanded preview"
+              />
             </div>
           </div>
         )}
         <div className="post-actions">
-          <div className="act cursor-pointer" onClick={toggleLike}>
-            <IconHeart stroke={2} className={isLiked ? 'liked' : ''} /> {likesCount}
+          <div
+            className={`act cursor-pointer${isLiked ? ' liked' : ''}`}
+            onClick={toggleLike}
+            aria-label={isLiked ? 'Unlike post' : 'Like post'}
+            aria-pressed={isLiked}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                toggleLike();
+              }
+            }}
+          >
+            <IconHeart stroke={2} fill={isLiked ? 'currentColor' : 'none'} /> {likesCount}
           </div>
           <div onClick={() => fetchAllComments(postId)} className="act cursor-pointer"><IconMessageCircle stroke={2} /> {totalCommentsAndReplies}</div>
           <div

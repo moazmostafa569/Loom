@@ -206,6 +206,14 @@
   font-weight: 600;
   font-size: 15px;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.notif-av img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .notif-av-sm {

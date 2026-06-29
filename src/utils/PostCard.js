@@ -9,12 +9,24 @@ export function getAvatarPhoto(value) {
   return photo;
 }
 
+function normalizePostTimestamp(value) {
+  if (typeof value !== 'string') return value;
+
+  const trimmed = value.trim();
+  const hasTimezone = /(?:[zZ]|[+-]\d{2}:?\d{2})$/.test(trimmed);
+  const looksLikeIsoDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(trimmed);
+
+  return looksLikeIsoDateTime && !hasTimezone ? `${trimmed}Z` : trimmed;
+}
+
 export function formatPostTime(value) {
   if (!value) return '· 12m';
-  const created = new Date(value);
+  const created = new Date(normalizePostTimestamp(value));
   if (Number.isNaN(created.getTime())) return '· 12m';
 
   const diffMs = Date.now() - created.getTime();
+  if (diffMs < 0 && Math.abs(diffMs) < 30_000) return '· just now';
+  if (diffMs >= 0 && diffMs < 30_000) return '· just now';
   if (diffMs < 0) return '· 12m';
 
   const minute = 60 * 1000;

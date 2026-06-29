@@ -112,7 +112,7 @@ export default function Search() {
   }
 
   return (
-    <div className="search-page">
+    <div className="search-page md:">
       <div className="search-inner">
 
         <section className="flex flex-col gap-4">

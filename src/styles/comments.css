@@ -481,18 +481,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: grab;
   -webkit-user-select: none;
   user-select: none;
   flex-shrink: 0;
 }
-.sheet-handle:active { cursor: grabbing; }
+
 .sheet-handle-bar {
   width: 56px;
   height: 6px;
   background: rgba(255,255,255,0.12);
   border-radius: 999px;
+  cursor: grab;
+  touch-action: none;
 }
+
+.sheet-handle-bar:active { cursor: grabbing; }
 
 .sheet-content {
   flex: 1;
@@ -501,6 +504,7 @@
   flex-direction: column;
   overflow: hidden;
   padding: 12px 18px 0;
+  touch-action: pan-y;
 }
 
 .comments--sheet {

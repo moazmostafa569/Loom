@@ -120,9 +120,11 @@ export async function unlikePost(postId) {
         if (!postId) {
             throw new Error('Missing postId for unlikePost');
         }
-        let {data} = await axios.delete(`${API_BASE_URL}/posts/${postId}/unlike`, {
-            headers: getAuthHeaders()
-        })
+        let {data} = await axios.put(
+            `${API_BASE_URL}/posts/${postId}/unlike`,
+            {},
+            { headers: getAuthHeaders() }
+        )
         return data;
 }
 export async function sharePost(postId) {

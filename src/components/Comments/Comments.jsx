@@ -885,6 +885,7 @@ export default function Comments({
     return () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
     };
   }, []);
 
@@ -908,6 +909,7 @@ export default function Comments({
     dragging.current = false;
     window.removeEventListener("pointermove", onPointerMove);
     window.removeEventListener("pointerup", onPointerUp);
+    window.removeEventListener("pointercancel", onPointerUp);
 
     const currentHeight = sheetHeightRef.current;
     const closeThreshold = window.innerHeight * (CLOSE_VH / 100);
@@ -928,12 +930,15 @@ export default function Comments({
   }
 
   function onHandlePointerDown(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+
     dragging.current = true;
     startY.current = e.clientY ?? (e.touches && e.touches[0]?.clientY) || 0;
     startHeight.current = sheetHeightRef.current;
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
-    try { sheetRef.current?.setPointerCapture?.(e.pointerId); } catch (err) { }
+    window.addEventListener("pointercancel", onPointerUp);
+    try { e.currentTarget?.setPointerCapture?.(e.pointerId); } catch (err) { }
     e.preventDefault();
   }
 
@@ -1094,8 +1099,8 @@ export default function Comments({
         className={`bottom-sheet ${visible ? 'open' : ''}`}
         style={{ height: sheetHeight ? `${sheetHeight}px` : undefined }}
       >
-        <div className="sheet-handle" onPointerDown={onHandlePointerDown} onTouchStart={onHandlePointerDown}>
-          <div className="sheet-handle-bar" />
+        <div className="sheet-handle">
+          <div className="sheet-handle-bar" onPointerDown={onHandlePointerDown} />
         </div>
         <div className="sheet-content">
           {commentsBody}

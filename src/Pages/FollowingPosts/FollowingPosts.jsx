@@ -257,6 +257,7 @@ export default function FollowingPosts() {
                             <img
                                 className="clickable-image w-full h-auto rounded-lg object-cover"
                                 src={displayPhoto || selectedGifUrl}
+                                loading={selectedGifUrl ? 'eager' : undefined}
                                 onClick={() => openImage(displayPhoto || selectedGifUrl)}
                                 alt={displayPhoto ? 'Post image' : 'Selected GIF'}
                             />
@@ -272,7 +273,11 @@ export default function FollowingPosts() {
                                     >
                                         <IconX className="cursor-pointer" stroke={2} />
                                     </button>
-                                    <img src={openImageSrc} alt="Expanded preview" />
+                                    <img
+                                        src={openImageSrc}
+                                        loading={String(openImageSrc).toLowerCase().includes('.gif') ? 'eager' : undefined}
+                                        alt="Expanded preview"
+                                    />
                                 </div>
                             </div>
                         )}

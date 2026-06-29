@@ -15,6 +15,7 @@ import {
   IconBrush,
   IconCode,
   IconCamera,
+  IconX,
 } from "@tabler/icons-react";
 
 import "./../../styles/saved.css";
@@ -23,6 +24,7 @@ import { getSavedPosts, savePost } from "../../services/AllPostsServices";
 import { Skeleton } from "../AllPosts/Skeleton/Skeleton";
 import { getInitials } from "../../utils/PostCard";
 import PostCard from './../../components/PostCard/PostCard';
+const DEFAULT_AVATAR_URL = 'https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png';
 
 
 // Posts are loaded from the API on mount.
@@ -32,13 +34,57 @@ function fmt(n) {
 }
 
 
+
 function GridCard({ post, onUnsave }) {
   const [liked, setLiked] = useState(post.liked);
   const [likes, setLikes] = useState(post.likes);
+  const [openImageSrc, setOpenImageSrc] = useState('');
+  const repostedContent = post?.repost || post?.sharedPost || post?.original || null;
+  const isSharedPost = Boolean(post?.isShared || post?.isReposted || post?.isRepost || post?.isShare || post?.sharedBy || post?.repostedBy || repostedContent);
+  const sourcePost = isSharedPost ? (repostedContent || post) : post;
+  const originalPostUser = sourcePost?.user || sourcePost?.creator || sourcePost?.author || sourcePost?.createdBy || sourcePost?.postedBy || {};
+  const originalAuthor = originalPostUser || post?.user || post?.creator || post?.author || post?.createdBy || post?.postedBy || {};
+  const avatarUser = isSharedPost ? sharerUser : originalAuthor;
+  const photo = (avatarUser.photo || avatarUser.avatar || avatarUser.image || '').trim();
+  const showImage = photo && photo !== DEFAULT_AVATAR_URL;
+  const initials = getInitials(avatarUser.name || avatarUser.fullname || avatarUser.username || 'User');
+  const image = post.image
+  const openImage = (src) => setOpenImageSrc(image || '');
+  const closeImage = () => setOpenImageSrc('');
+
+
 
   return (
     <div className="saved-card">
-      {post.media && <div className="sc-img">photo attachment</div>}
+
+      {showImage ? (
+        <img
+          className="clickable-image object-cover  h-fit w-full "
+          src={image}
+          onClick={() => openImage(post.image)}
+
+          alt={'User avatar'}
+        />
+      ) : initials}
+      {openImageSrc && (
+        <div className="image-overlay" onClick={closeImage}>
+          <div className="image-overlay-content relative" onClick={(event) => event.stopPropagation()}>
+            <button
+              className="hidden lg:flex absolute top-4 right-4 z-20 rounded-full bg-black/60 p-2 text-white hover:bg-black"
+              onClick={closeImage}
+              aria-label="Close image"
+            >
+              <IconX className="cursor-pointer" stroke={2} />
+            </button>
+            <img
+              src={openImageSrc}
+              loading={String(openImageSrc).toLowerCase().includes('.gif') ? 'eager' : undefined}
+              alt="Expanded preview"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="sc-body">
         <div className="sc-meta">
           <div className={`sc-av av-${post.color}`}>{post.initials}</div>
@@ -53,9 +99,6 @@ function GridCard({ post, onUnsave }) {
           >
             <IconHeart size={14} stroke={1.5} /> {fmt(likes)}
           </button>
-          <button className="sc-unsave" onClick={() => onUnsave(post.id)} aria-label="Unsave">
-            <IconBookmarkOff size={15} stroke={1.5} />
-          </button>
         </div>
       </div>
     </div>
@@ -67,10 +110,13 @@ export default function SavedPosts() {
   const [activeTab, setActiveTab] = useState("Posts");
   const [view, setView] = useState("list");
   const [search, setSearch] = useState("");
+
   const { data: savedPostsData, isLoading } = useQuery({
     queryKey: ['savedPosts'],
     queryFn: async () => {
       const { data } = await getSavedPosts();
+      console.log(data);
+
       let items = [];
       if (!data) items = [];
       else if (Array.isArray(data)) items = data;
@@ -101,9 +147,9 @@ export default function SavedPosts() {
           time: p.time || p.createdAt || "",
           text: p.body || p.text || p.content || "",
           tag: p.tag || "",
-          image: p.image || p.imageUrl || p.photo || p.mediaUrl || "",
+          image: p.image || "",
           media: !!(p.image || p.media || p.hasMedia),
-          likes: p.likes || p.likesCount || 0,
+          likes: p.likesCount,
           comments: p.comments || p.commentsCount || 0,
           reposts: p.reposts || p.repostsCount || 0,
           liked: !!p.liked,
@@ -114,15 +160,6 @@ export default function SavedPosts() {
   })
   const posts = savedPostsData || []
 
-  async function unsave(id) {
-    try {
-      await savePost(id);
-      setPosts((prev) => prev.filter((p) => p.id !== id));
-    } catch (error) {
-      console.log("Failed to toggle bookmark:", error);
-      // keep post in list on failure
-    }
-  }
 
   const filtered = posts.filter((p) => {
     const matchCol = activeCollection === "all" || p.collection === activeCollection;
@@ -133,15 +170,23 @@ export default function SavedPosts() {
   const sections = [...new Set(filtered.map((p) => p.section))];
 
   const SIDE_COLLECTIONS = [
-    { id: "design", label: "Design",      icon: "gold",  iconCmp: IconBrush,    count: 12 },
-    { id: "dev",    label: "Dev",          icon: "mint",  iconCmp: IconCode,     count: 9  },
-    { id: "inspo",  label: "Inspo",        icon: "lav",   iconCmp: IconSparkles, count: 8  },
-    { id: "photo",  label: "Photography",  icon: "coral", iconCmp: IconCamera,   count: 5  },
+    { id: "design", label: "Design", icon: "gold", iconCmp: IconBrush, count: 12 },
+    { id: "dev", label: "Dev", icon: "mint", iconCmp: IconCode, count: 9 },
+    { id: "inspo", label: "Inspo", icon: "lav", iconCmp: IconSparkles, count: 8 },
+    { id: "photo", label: "Photography", icon: "coral", iconCmp: IconCamera, count: 5 },
   ];
-
+async function unsave(id) {
+  try {
+    await savePost(id);
+    setPosts((prev) => prev.filter((p) => p.id !== id));
+  } catch (error) {
+    console.log("Failed to toggle bookmark:", error);
+    // keep post in list on failure
+  }
+}
   return (
     <div className="saved-layout ">
-    
+
 
       <main className="saved-main ">
         <div className="saved-header ">
@@ -252,7 +297,7 @@ export default function SavedPosts() {
               </div>
             </div>
           ))}
-         
+
         </div>
 
         <div className="side-panel">

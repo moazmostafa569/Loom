@@ -7,7 +7,7 @@
   min-height: 100vh;
 }
 
-@media (min-width: 768px) {
+@media (mxn-width: 1023px) {
   .saved-layout {
     grid-template-columns: 72px minmax(0, 640px) 320px;
   }
@@ -662,7 +662,7 @@
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1022px) {
   .saved-layout {
     grid-template-columns: 1fr;
   }
