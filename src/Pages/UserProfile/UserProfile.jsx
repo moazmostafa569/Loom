@@ -215,9 +215,6 @@ export default function UserProfile() {
               <button className="btn-outline" aria-label="Notify on posts">
                 <IconBell size={16} stroke={1.5} />
               </button>
-              <button className="btn-outline">
-                <IconMail size={16} stroke={1.5} /> Message
-              </button>
               {<button className="btn-fill" onClick={handleFollowClick}>
                 {isFollowing ? "Following" : "Follow"}
               </button>

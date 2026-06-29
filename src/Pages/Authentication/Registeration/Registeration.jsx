@@ -30,6 +30,7 @@ export default function Registeration() {
       gender: '',
       password: '',
       rePassword: '',
+      terms: true,
     },
   })
 
@@ -160,9 +161,10 @@ export default function Registeration() {
               <p className="text-red-500 text-sm mt-1">{errors.gender?.message}</p>
             </div>
             <div className="terms">
-              <input type="checkbox" id="terms" defaultChecked />
+              <input type="checkbox" id="terms" {...register('terms')} />
               <p>I agree to Loom's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>, and confirm I'm at least 16 years old.</p>
             </div>
+            <p className="text-red-500 text-sm mt-1">{errors.terms?.message}</p>
             <Button isLoading={isSubmitting} className="btn-primary w-full flex justify-center items-center" type="submit">
               Create account <IconArrowRight size={16} stroke={1.5} />
             </Button>

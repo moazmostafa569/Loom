@@ -44,18 +44,30 @@ function parseNotificationsList(res) {
 
 const POST_LINK_TYPES = new Set(["like", "comment", "reply", "mention", "share"]);
 function extractPostId(notif) {
+    if (!notif || typeof notif !== "object") return null;
+    const entity = notif.entity || notif.post || {};
     return (
-        notif?.entity.Id ??
-        (typeof notif?._id === "string" ? notif._id : null)
+        entity.entityId ??
+        entity._id ??
+        entity.id ??
+        notif?.entityId ??
+        null
     );
 }
 
 function extractSenderId(notif) {
     return (
         notif?.actor?._id ??
+        notif?.actor?.id ??
+        notif?.actor?.userId ??
+        notif?.actor?.user?._id ??
+        notif?.actor?.user?.id ??
         (typeof notif?.sender === "string" ? notif.sender : null) ??
         notif?.senderId ??
-        notif?.sender_id
+        notif?.sender_id ??
+        notif?.sender?._id ??
+        notif?.sender?.id ??
+        null
     );
 }
 
@@ -68,49 +80,60 @@ function getInitials(name, fallback = "??") {
 }
 
 function getSenderDetails(notif) {
-    const sender = notif?.actor;
+    const sender = notif?.actor || notif?.sender;
     const fallback = {
         id: extractSenderId(notif),
-        name: notif.actor.name,
-        initials: notif.actor.name,
+        name: notif?.actor?.name || notif?.sender?.name || "Someone",
+        initials: notif?.actor?.name || notif?.sender?.name || "??",
         color: "coral",
-        photo: notif.actor.photo ,
+        photo: getAvatarPhoto(notif?.actor?.photo || notif?.sender?.photo),
     };
 
     if (!sender || typeof sender !== "object") return fallback;
 
-    const name = sender.name|| "Someone";
+    const name = sender.name || sender.fullname || sender.username || "Someone";
     const hasRealName = name !== "Someone";
 
     return {
-        id: sender._id ,
+        id: extractSenderId(notif),
         name,
         initials: sender.initials || getInitials(hasRealName ? name : "", "??"),
         color: sender.color || "coral",
-        photo: getAvatarPhoto(sender.photo ),
+        photo: getAvatarPhoto(sender.photo || sender.avatar || sender.image),
     };
 }
 
 function getPostPreview(post) {
     if (!post || typeof post !== "object") return "";
-    const text = post.entity.body || post.body || post.text || post.caption || "";
+    const text = post.entity || "";
     return text ? text.slice(0, 48) : "";
 }
 
 const TYPE_ALIASES = {
     liked: "like",
     likes: "like",
+    like_post: "like",
     commented: "comment",
     comments: "comment",
+    comment_post: "comment",
     replied: "reply",
     replies: "reply",
+    reply_post: "reply",
     followed: "follow",
     follows: "follow",
     follower: "follow",
+    follow: "follow",
+    follow_user: "follow",
+    followed_you: "follow",
+    follow_you: "follow",
+    following: "follow",
+    mention: "mention",
     mentioned: "mention",
     mentions: "mention",
+    mention_post: "mention",
     shared: "share",
     shares: "share",
+    share_post: "share",
     repost: "share",
     reposted: "share",
 };
@@ -169,12 +192,12 @@ function NotifItem({ notif, onRead, following, onFollow, onNavigate, onClose }) 
     const normalizedType = normalizeNotificationType(notif.type);
     const Icon = cfg.icon;
     const sender = getSenderDetails(notif);
-    const postPreview = getPostPreview(notif.post);
+    const postPreview = getPostPreview(notif.post || notif.entity);
     const initials = sender.initials;
     const color = sender.color;
     const postId = extractPostId(notif);
     const senderId = sender.id || extractSenderId(notif);
-    const targetPostId = notif?.entityId || notif?.entity?.Id || notif?.entity?._id || notif?.entity?.id || notif?.post?._id || notif?.post?.id || postId;
+    const targetPostId = postId || notif?.entityId || notif?.entity?.Id || notif?.entity?._id || notif?.entity?.id || notif?.post?._id || notif?.post?.id;
     const currentUserId = localStorage.getItem("user-id");
     const isSelfSender = Boolean(currentUserId && senderId && String(senderId) === String(currentUserId));
     const isPostNavigable = POST_LINK_TYPES.has(normalizedType) && Boolean(targetPostId);
