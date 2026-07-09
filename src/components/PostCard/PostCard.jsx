@@ -5,7 +5,7 @@ import { getAllComments, getReplies } from '../../services/AllComents';
 import Comments from '../Comments/Comments';
 import './../../styles/PostCard.css'
 import { useNavigate } from 'react-router-dom';
-import { savePost, updatePost, deletePost, likePost, sharePost, unSharePost, getPostLikes, getAllPosts } from '../../services/AllPostsServices';
+import { savePost, updatePost, deletePost, likePost, sharePost, unSharePost, getPostLikes, getAllPosts, getSavedPosts } from '../../services/AllPostsServices';
 
 const DEFAULT_AVATAR_URL = 'https://pub-3cba56bacf9f4965bbb0989e07dada12.r2.dev/linkedPosts/default-profile.png';
 
@@ -19,13 +19,13 @@ function getInitials(name) {
 }
 
 
-export default function PostCard({ post, onDelete }) {
+export default function PostCard({ post, onDelete, onUnsave }) {
 
   const [showComments, setShowComments] = useState(false);
   const [comments, setComments] = useState([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false)
-  const [isSaved, setIsSaved] = useState(false);
+  const [isSaved, setIsSaved] = useState(() => Boolean(post?.isSaved || post?.saved || false));
   const [isLiked, setIsLiked] = useState(() => Boolean(post?.isLiked));
   const [isShared, setIsShared] = useState(false);
   const [sharePostId, setSharePostId] = useState('');
@@ -198,9 +198,14 @@ export default function PostCard({ post, onDelete }) {
   }
 
   useEffect(() => {
-    const savedPosts = JSON.parse(localStorage.getItem('saved-posts') || '[]');
-    const isPostSaved = savedPosts.includes(postId);
-    setIsSaved(isPostSaved);
+    const isSavedFromPost = Boolean(post?.isSaved || post?.saved || post?.collection || post?.bookmark || post?.isBookmark || post?.bookmarked);
+    if (isSavedFromPost) {
+      setIsSaved(true);
+    } else {
+      const savedPosts = JSON.parse(localStorage.getItem('saved-posts') || '[]');
+      const isPostSaved = savedPosts.includes(postId);
+      setIsSaved(isPostSaved);
+    }
 
     const likedFromArray = Array.isArray(post?.likes) && currentUserId
       ? post.likes.some((liker) => {
@@ -292,6 +297,9 @@ export default function PostCard({ post, onDelete }) {
 
       localStorage.setItem('saved-posts', JSON.stringify(updatedSavedPosts));
       setIsSaved(!currentSaved);
+      if (currentSaved && typeof onUnsave === 'function') {
+        onUnsave(postId);
+      }
       console.log('Bookmark toggled successfully:', response);
     } catch (error) {
       console.error('Failed to toggle bookmark:', error);
@@ -586,8 +594,9 @@ export default function PostCard({ post, onDelete }) {
             className="act cursor-pointer"
             onClick={handleShareToggle}
             aria-disabled={false}
-          >
+          > 
             {isShared ? <IconRepeatOff stroke={2} /> : <IconRepeat stroke={2} />}
+            {initialSharesCount}
           </div>
           <div onClick={handleSavePost} className="act cursor-pointer"><IconBookmark stroke={2} className={isSaved ? 'saved' : ''} /></div>
         </div>

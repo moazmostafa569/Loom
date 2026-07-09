@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   IconBookmark,
   IconBookmarkOff,
@@ -66,7 +66,7 @@ function GridCard({ post, onUnsave }) {
 
           alt={'User avatar'}
         />
-      ) : initials}
+      ) : ''}
       {openImageSrc && (
         <div className="image-overlay" onClick={closeImage}>
           <div className="image-overlay-content relative" onClick={(event) => event.stopPropagation()}>
@@ -111,6 +111,12 @@ export default function SavedPosts() {
   const [activeTab, setActiveTab] = useState("Posts");
   const [view, setView] = useState("list");
   const [search, setSearch] = useState("");
+  const queryClient = useQueryClient();
+
+  const saveMutation = useMutation({
+    mutationFn: savePost,
+    onSuccess: () => queryClient.invalidateQueries(['savedPosts']),
+  });
 
   const { data: savedPostsData, isLoading } = useQuery({
     queryKey: ['savedPosts'],
@@ -159,6 +165,7 @@ export default function SavedPosts() {
           comments: p.comments || p.commentsCount || sourcePost.commentsCount || 0,
           reposts: p.reposts || p.repostsCount || sourcePost.repostsCount || 0,
           liked: !!(p.liked || sourcePost.liked),
+          isSaved: true,
           collection: p.collection || p.bookmark?.collection || "all",
         };
       });
@@ -175,19 +182,45 @@ export default function SavedPosts() {
 
   const sections = [...new Set(filtered.map((p) => p.section))];
 
+  const collectionCounts = posts.reduce((acc, p) => {
+    const key = (p.collection || "all").toLowerCase();
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+
+  const uniqueCollectionCount = Object.keys(collectionCounts).filter((key) => key !== "all").length || 1;
+
+  const thisWeekSaved = posts.reduce((count, p) => {
+    const timestamp = Date.parse(p.time);
+    if (!Number.isNaN(timestamp)) {
+      const diff = Date.now() - timestamp;
+      return diff <= 1000 * 60 * 60 * 24 * 7 ? count + 1 : count;
+    }
+    return count;
+  }, 0);
+
+  const mostSavedTag = (() => {
+    const tagCounts = posts.reduce((acc, p) => {
+      const tag = String(p.tag || "").trim().toLowerCase();
+      if (!tag) return acc;
+      acc[tag] = (acc[tag] || 0) + 1;
+      return acc;
+    }, {});
+    const best = Object.entries(tagCounts).sort((a, b) => b[1] - a[1])[0];
+    return best ? `#${best[0]}` : "#none";
+  })();
+
   const SIDE_COLLECTIONS = [
-    { id: "design", label: "Design", icon: "gold", iconCmp: IconBrush, count: 12 },
-    { id: "dev", label: "Dev", icon: "mint", iconCmp: IconCode, count: 9 },
-    { id: "inspo", label: "Inspo", icon: "lav", iconCmp: IconSparkles, count: 8 },
-    { id: "photo", label: "Photography", icon: "coral", iconCmp: IconCamera, count: 5 },
+    { id: "design", label: "Design", icon: "gold", iconCmp: IconBrush, count: collectionCounts.design || 0 },
+    { id: "dev", label: "Dev", icon: "mint", iconCmp: IconCode, count: collectionCounts.dev || 0 },
+    { id: "inspo", label: "Inspo", icon: "lav", iconCmp: IconSparkles, count: collectionCounts.inspo || 0 },
+    { id: "photo", label: "Photography", icon: "coral", iconCmp: IconCamera, count: collectionCounts.photo || 0 },
   ];
 async function unsave(id) {
   try {
-    await savePost(id);
-    setPosts((prev) => prev.filter((p) => p.id !== id));
+    await saveMutation.mutateAsync(id);
   } catch (error) {
     console.log("Failed to toggle bookmark:", error);
-    // keep post in list on failure
   }
 }
   return (
@@ -309,9 +342,9 @@ async function unsave(id) {
         <div className="side-panel">
           <h3>Your saves</h3>
           <div className="stat-row"><span className="lbl">Total saved</span><span className="val">{posts.length}</span></div>
-          <div className="stat-row"><span className="lbl">Collections</span><span className="val">4</span></div>
-          <div className="stat-row"><span className="lbl">This week</span><span className="val">7</span></div>
-          <div className="stat-row"><span className="lbl">Most saved tag</span><span className="val" style={{ color: "var(--mint)" }}>#design</span></div>
+          <div className="stat-row"><span className="lbl">Collections</span><span className="val">{uniqueCollectionCount}</span></div>
+          <div className="stat-row"><span className="lbl">This week</span><span className="val">{thisWeekSaved}</span></div>
+          <div className="stat-row"><span className="lbl">Most saved tag</span><span className="val" style={{ color: "var(--mint)" }}>{mostSavedTag}</span></div>
         </div>
       </aside>
     </div>
