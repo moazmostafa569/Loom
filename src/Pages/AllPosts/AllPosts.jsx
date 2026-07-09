@@ -212,7 +212,7 @@ export default function AllPosts() {
       ...prev,
       ...Object.fromEntries(followSuggestions.map((suggestion) => [getSuggestionKey(suggestion), isSuggestionFollowing(suggestion)])),
     }));
-  }, [followSuggestions])
+  }, [followSuggestionsData])
 
   async function handleToggleFollow(userId, key = userId) {
     if (!userId) return;
